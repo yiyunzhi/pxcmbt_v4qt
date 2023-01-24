@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 from PySide6 import QtCore, QtGui
-
+from .define import EnumADSIcon
 
 class IconProviderMgr:
     _this: 'CIconProvider'
@@ -28,13 +28,14 @@ class IconProviderMgr:
 
     def __init__(self, _this):
         self._this = _this
+        self.userIcons=dict()
 
 
 class CIconProvider:
     def __init__(self):
         self._mgr = IconProviderMgr(self)
 
-    def customIcon(self, icon_id):
+    def customIcon(self, icon_id:EnumADSIcon):
         return self._mgr.userIcons.get(icon_id)
 
     def registerCustomIcon(self, icon_id, icon: QtGui.QIcon):

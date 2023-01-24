@@ -22,14 +22,15 @@
 import typing, logging
 from PySide6 import QtCore, QtGui, QtWidgets
 from .define import EnumDockWidgetFeature
-from .util import LINUX, qApp,repolishStyle,EnumRepolishChildOptions,findParent
+from .util import LINUX, getQApp, repolishStyle, EnumRepolishChildOptions, findParent
 from .dock_widget_tab import CDockWidgetTab
 
+from .dock_widget import CDockWidget
+from .dock_area_widget import CDockAreaWidget
+
 if typing.TYPE_CHECKING:
-    from .dock_widget import CDockWidget
     from .dock_manager import CDockManager
     from .floating_dock_container import CFloatingDockContainer
-    from .dock_area_widget import CDockAreaWidget
 
 logger = logging.getLogger(__name__)
 _FocusedDockWidgetProperty = "FocusedDockWidget"
@@ -50,6 +51,8 @@ def updateDockAreaFocusStyle(dock_area, focused: bool):
 
 if LINUX:
     from .linux.floating_widget_title_bar import CFloatingWidgetTitleBar
+
+
     def updateFloatingWidgetFocusStyle(floating_widget: CFloatingDockContainer, focused: bool):
         if floating_widget.hasNativeTitleBar():
             return
@@ -78,6 +81,9 @@ class DockFocusControllerMgr:
         self.dockManager = None
         self.forceFocusChangedSignal = False
 
+    def _onFocusAreaDestroyed(self, evt):
+        self.focusedArea = None
+
     def updateDockWidgetFocus(self, dock_widget: 'CDockWidget'):
         if EnumDockWidgetFeature.FOCUSABLE not in dock_widget.features():
             return
@@ -101,6 +107,8 @@ class DockFocusControllerMgr:
             self.focusedArea = _new_focused_dock_area
             updateDockAreaFocusStyle(self.focusedArea, True)
             self.focusedArea.sigViewToggled.connect(self._this.onFocusedDockAreaViewToggled)
+            # modified: if focusedArea is gone should this reference updated
+            self.focusedArea.destroyed.connect(self._onFocusAreaDestroyed)
         _new_floating_widget = None
         _dock_container = self.focusedDockWidget.dockContainer()
         if _dock_container is not None:
@@ -120,10 +128,10 @@ class DockFocusControllerMgr:
             return
         self.forceFocusChangedSignal = False
         if dock_widget.isVisible():
-            self.dockManager.sigFocusedDockWidgetChanged(_old, dock_widget)
+            self.dockManager.sigFocusedDockWidgetChanged.emit(_old, dock_widget)
         else:
             self.oldFocusedDockWidget = _old
-            dock_widget.visibilityChanged.connect(self._this.onDockWidgetVisibilityChanged)
+            dock_widget.sigVisibilityChanged.connect(self._this.onDockWidgetVisibilityChanged)
 
 
 class CDockFocusController(QtCore.QObject):
@@ -131,22 +139,18 @@ class CDockFocusController(QtCore.QObject):
         super().__init__()
         self._mgr = DockFocusControllerMgr(self)
         self._mgr.dockManager = dock_manager
-        qApp.focusChanged.connect(self.onApplicationFocusChanged)
-        qApp.focusWindowChanged.connect(self.onFocusWindowChanged)
+        getQApp().focusChanged.connect(self.onApplicationFocusChanged)
+        getQApp().focusWindowChanged.connect(self.onFocusWindowChanged)
         self._mgr.dockManager.sigStateRestored.connect(self.onStateRestored)
 
     def onFocusWindowChanged(self, focus_win: QtGui.QWindow):
         if focus_win is None:
             return
         _v_dock_widget = focus_win.property(_FocusedDockWidgetProperty)
-        if not _v_dock_widget.isValid():
+        if _v_dock_widget is None:
             return
-            # todo: pointer consider
-        logger.debug('---->CDockFocusController read instance from property')
-        _dock_widget = _v_dock_widget.value()
-        if _dock_widget is None:
-            return
-        self._mgr.updateDockWidgetFocus(_dock_widget)
+        logger.debug('CDockFocusController:onFocusWindowChanged read instance from property')
+        self._mgr.updateDockWidgetFocus(_v_dock_widget)
 
     def onFocusedDockAreaViewToggled(self, open_: bool):
         if self._mgr.dockManager.isRestoringState():
@@ -167,7 +171,7 @@ class CDockFocusController(QtCore.QObject):
         if focused_now is None:
             return
         _dock_widget = None
-        if isinstance(focused_now, CDockWidget):
+        if not isinstance(focused_now, CDockWidget):
             _dock_widget = findParent(CDockWidget, focused_now)
         if LINUX:
             if _dock_widget is None:
@@ -191,7 +195,7 @@ class CDockFocusController(QtCore.QObject):
     def onDockWidgetVisibilityChanged(self, visible):
         _sender = self.sender()
         if isinstance(_sender, CDockWidget):
-            _sender.visibilityChanged.disconnect(self.onDockWidgetVisibilityChanged)
+            _sender.sigVisibilityChanged.disconnect(self.onDockWidgetVisibilityChanged)
         if _sender is not None and visible:
             self._mgr.dockManager.sigFocusedDockWidgetChanged.emit(self._mgr.oldFocusedDockWidget, _sender)
 
@@ -209,10 +213,10 @@ class CDockFocusController(QtCore.QObject):
         if floating_widget is None or self._mgr.dockManager.isRestoringState():
             return
         _v_dock_widget = floating_widget.property(_FocusedDockWidgetProperty)
-        if not _v_dock_widget.isValid():
+        if _v_dock_widget is None:
             return
         logger.debug('--->notifyFloatingWidgetDrop construct _dock_widget')
-        _dock_widget = _v_dock_widget.value()
+        _dock_widget = _v_dock_widget
         if _dock_widget is not None:
             _dock_widget.dockAreaWidget().setCurrentDockWidget(_dock_widget)
             self._mgr.dockManager.setDockWidgetFocused(_dock_widget)

@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING, no_type_check
 import logging
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .floating_frag_preview import CFloatingDragPreview
+from .floating_drag_preview import CFloatingDragPreview
 from .util import (startDragDistance, setButtonIcon,
-                   qApp, evtDockedWidgetDragStartEvent,
+                   getQApp, evtDockedWidgetDragStartEvent,
                    evtFloatingWidgetDragStartEvent, globalPositionOf,
                    repolishStyle, EnumRepolishChildOptions)
 from .define import (EnumDragState,
@@ -15,7 +15,8 @@ from .define import (EnumDragState,
                      AUTO_HIDE_DEFAULT_CONFIG,
                      EnumAutoHideFlag,
                      EnumSideBarLocation,
-                     EnumDockWidgetFeature)
+                     EnumDockWidgetFeature,
+                     EnumADSIcon)
 from .eliding_label import CElidingLabel
 
 if TYPE_CHECKING:
@@ -103,18 +104,22 @@ class DockWidgetTabMgr:
         self.iconLabel.setVisible(True)
 
     def createFloatingWidget(self, widget: QtWidgets.QWidget, opaque_undocking):
+        from . import CFloatingDockContainer, CFloatingDragPreview,CDockWidget,CDockAreaWidget
         if opaque_undocking:
-            return CFloatingDockContainer(widget)
+            if isinstance(widget, CDockWidget):
+                return CFloatingDockContainer(dock_widget=widget)
+            elif isinstance(widget, CDockAreaWidget):
+                return CFloatingDockContainer(dock_area=widget)
         else:
             _w = CFloatingDragPreview(widget)
-            _w.sigDraggingCanceled.connect(self._onCreateFloatingWidget)
+            _w.sigDraggingCanceled.connect(self._onCreateFloatingWidgetPreview)
             return _w
 
     def saveDragStartMousePosition(self, pos: QtCore.QPoint):
         self.globalDragStartMousePosition = pos
         self.dragStartMousePosition = self._this.mapFromGlobal(pos)
 
-    def _onCreateFloatingWidget(self, evt):
+    def _onCreateFloatingWidgetPreview(self, evt):
         self.dragState = EnumDragState.INACTIVE
 
     def createLayout(self):
@@ -130,8 +135,8 @@ class DockWidgetTabMgr:
         self.closeButton = QtWidgets.QPushButton()
         self.closeButton.setObjectName("tabCloseButton")
 
-        setButtonIcon(self._this.style(), self.closeButton,
-                      QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton)
+        setButtonIcon(self.closeButton,
+                      QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton, EnumADSIcon.CLOSE)
 
         self.closeButton.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed,
                                        QtWidgets.QSizePolicy.Policy.Fixed)
@@ -165,7 +170,7 @@ class DockWidgetTabMgr:
         '''
         ev.accept()
         # left, top, right, bottom = self.public.getContentsMargins()
-        _distance = self._this.mapToParent(ev.pos()) - self.globalDragStartMousePosition
+        _distance = globalPositionOf(ev) - self.globalDragStartMousePosition
         _distance.setY(0)
         _target_pos = _distance + self.tabDragStartPosition
         _target_pos.setX(max(_target_pos.x(), 0))
@@ -235,27 +240,31 @@ class DockWidgetTabMgr:
 
         logger.debug('startFloating')
         self.dragState = dragging_state
+        _floating_w = None
         _opaque_undocking = EnumDockMgrConfigFlag.OpaqueUndocking in DOCK_MANAGER_DEFAULT_CONFIG or dragging_state != EnumDragState.FLOATING_WIDGET
 
         _size = self.dockArea.size()
 
         if self.dockArea.dockWidgetsCount() > 1:
             # If section widget has multiple tabs, we take only one tab
-            self.floatingWidget = self.createFloatingWidget(self.dockWidget, _opaque_undocking)
+            _floating_w = self.createFloatingWidget(self.dockWidget, _opaque_undocking)
             _size = self.dockWidget.size()
         else:
             # If section widget has only one content widget, we can move the complete
             # dock area into floating widget
-            self.floatingWidget = self.createFloatingWidget(self.dockArea, _opaque_undocking)
+            _floating_w = self.createFloatingWidget(self.dockArea, _opaque_undocking)
+            _size = self.dockArea.size()
 
         if dragging_state == EnumDragState.FLOATING_WIDGET:
-            self.floatingWidget.startFloating(self.dragStartMousePosition,
-                                              _size, EnumDragState.FLOATING_WIDGET, self._this)
+            _floating_w.startFloating(self.dragStartMousePosition,
+                                      _size, EnumDragState.FLOATING_WIDGET, self._this)
+
             _overlay = self.dockWidget.dockManager().containerOverlay()
             _overlay.setAllowedAreas(EnumDockWidgetArea.OUTER_DOCK_AREAS)
-            qApp.postEvent(self.dockWidget, QtCore.QEvent(evtDockedWidgetDragStartEvent))
+            self.floatingWidget = _floating_w
+            getQApp().postEvent(self.dockWidget, QtCore.QEvent(QtCore.QEvent.Type(evtDockedWidgetDragStartEvent)))
         else:
-            self.floatingWidget.startFloating(self.dragStartMousePosition, _size, EnumDragState.INACTIVE, None)
+            _floating_w.startFloating(self.dragStartMousePosition, _size, EnumDragState.INACTIVE, None)
         return True
 
 
@@ -347,7 +356,7 @@ class CDockWidgetTab(QtWidgets.QFrame):
 
         # move floating window
         if self._mgr.isDraggingState(EnumDragState.FLOATING_WIDGET):
-            self._mgr.floatingWidget.move_floating()
+            self._mgr.floatingWidget.moveFloating()
             super().mouseMoveEvent(ev)
             return
 
@@ -364,8 +373,8 @@ class CDockWidgetTab(QtWidgets.QFrame):
             # one single dock widget it does not make  sense to move it to a new
             # floating widget and leave this one empty
             if (self._mgr.dockArea.dockContainer().isFloating()
-                    or self._mgr.dockArea.openDockWidgetsCount() == 1
-                    or self._mgr.dockArea.dockContainer().visibleDockAreaCount() == 1):
+                    and self._mgr.dockArea.openDockWidgetsCount() == 1
+                    and self._mgr.dockArea.dockContainer().visibleDockAreaCount() == 1):
                 return
             # Floating is only allowed for widgets that are floatable
             # If we do non opaque undocking, then can create the drag preview
@@ -373,17 +382,17 @@ class CDockWidgetTab(QtWidgets.QFrame):
             _features = self._mgr.dockWidget.features()
             _is_opaque_undocking = EnumDockMgrConfigFlag.OpaqueUndocking in DOCK_MANAGER_DEFAULT_CONFIG
             if (EnumDockWidgetFeature.FLOATABLE in _features
-                    or EnumDockWidgetFeature.MOVABLE in _features and _is_opaque_undocking):
+                    or (EnumDockWidgetFeature.MOVABLE in _features and not _is_opaque_undocking)):
                 # If we undock, we need to restore the initial position of this
                 # tab because it looks strange if it remains on its dragged position
-                if self._mgr.isDraggingState(EnumDragState.TAB) and _is_opaque_undocking:
+                if self._mgr.isDraggingState(EnumDragState.TAB) and not _is_opaque_undocking:
                     self.parentWidget().layout().update()
                 self._mgr.startFloating()
             return
         elif self._mgr.dockArea.openDockWidgetsCount() > 1 and (
                 globalPositionOf(ev) - self._mgr.globalDragStartMousePosition).manhattanLength() >= QtWidgets.QApplication.startDragDistance():
             # If we start dragging the tab, we save its inital position to restore it later
-            if self._mgr.dragState == EnumDragState.TAB:
+            if self._mgr.dragState != EnumDragState.TAB:
                 self._mgr.tabDragStartPosition = self.pos()
             self._mgr.dragState = EnumDragState.TAB
             return
@@ -402,29 +411,38 @@ class CDockWidgetTab(QtWidgets.QFrame):
         if self._mgr.isDraggingState(EnumDragState.FLOATING_WIDGET):
             return
         self._mgr.saveDragStartMousePosition(ev.globalPos())
-        _is_floatable = EnumDockWidgetFeature.FLOATABLE in self._mgr.dockWidget.features
+        _is_floatable = EnumDockWidgetFeature.FLOATABLE in self._mgr.dockWidget.features()
         _is_not_only_tab_in_container = not self._mgr.dockArea.dockContainer().hasTopLevelDockWidget()
         _is_top_level_area = self._mgr.dockArea.isTopLevelArea()
         _is_detachable = _is_floatable and _is_not_only_tab_in_container
-        _action = QtGui.QAction()
+
         _menu = QtWidgets.QMenu()
         if not _is_top_level_area:
-            _action = _menu.addAction('detach', self.onDetachDockWidget)
+            _action = QtGui.QAction('detach', self)
             _action.setEnabled(_is_detachable)
+            _action.triggered.connect(self.onDetachDockWidget)
+            _menu.addAction(_action)
             if EnumAutoHideFlag.AutoHideFeatureEnabled in AUTO_HIDE_DEFAULT_CONFIG:
-                _is_pinnable = EnumDockWidgetFeature.PINNABLE in self._mgr.dockWidget.features
+                _is_pinnable = EnumDockWidgetFeature.PINNABLE in self._mgr.dockWidget.features()
+                _action = QtGui.QAction('Pin to', self)
                 _action.setEnabled(_is_pinnable)
-                _menu = _menu.addMenu('Pin to')
-                _menu.setEnabled(_is_pinnable)
-                self._mgr.createAutoHideToAction('top', EnumSideBarLocation.TOP, _menu)
-                self._mgr.createAutoHideToAction('Left', EnumSideBarLocation.LEFT, _menu)
-                self._mgr.createAutoHideToAction('Right', EnumSideBarLocation.RIGHT, _menu)
-                self._mgr.createAutoHideToAction('Bottom', EnumSideBarLocation.BOTTOM, _menu)
+                # fixme: what slot bind to?
+                # _action.triggered.connect(self.onDetachDockWidget)
+                _s_menu = _menu.addMenu('Pin to')
+                self._mgr.createAutoHideToAction('top', EnumSideBarLocation.TOP, _s_menu)
+                self._mgr.createAutoHideToAction('Left', EnumSideBarLocation.LEFT, _s_menu)
+                self._mgr.createAutoHideToAction('Right', EnumSideBarLocation.RIGHT, _s_menu)
+                self._mgr.createAutoHideToAction('Bottom', EnumSideBarLocation.BOTTOM, _s_menu)
         _menu.addSeparator()
-        _action = _menu.addAction('close', self.sigCloseRequested)
+        _action = QtGui.QAction('close', self)
         _action.setEnabled(self.isClosable())
+        _action.triggered.connect(self.sigCloseRequested)
+        _menu.addAction(_action)
+
         if self._mgr.dockArea.openDockWidgetsCount() > 1:
-            _action = _menu.addAction('close others', self.sigCloseOtherTabsRequested)
+            _action = QtGui.QAction('close others', self)
+            _action.triggered.connect(self.sigCloseOtherTabsRequested)
+            _menu.addAction(_action)
 
         _menu.exec(ev.globalPos())
 
@@ -460,7 +478,7 @@ class CDockWidgetTab(QtWidgets.QFrame):
         return self._mgr.isActiveTab
 
     def setVisible(self, visible):
-        visible &=  EnumDockWidgetFeature.NO_TAB not in self._mgr.dockWidget.features()
+        visible &= EnumDockWidgetFeature.NO_TAB not in self._mgr.dockWidget.features()
         super().setVisible(visible)
 
     def setActiveTab(self, active: bool):
@@ -607,7 +625,7 @@ class CDockWidgetTab(QtWidgets.QFrame):
         self._mgr.updateCloseButtonVisibility(self.isActiveTab())
 
     def onAutoHideToActionClicked(self):
-        _loc = int(self.sender().property('location'))
+        _loc = self.sender().property('Location')
         self.dockWidget().toggleAutoHide(_loc)
 
     def autoHideDockWidget(self):
@@ -643,3 +661,7 @@ class CDockWidgetTab(QtWidgets.QFrame):
     def setIconSize(self, size: QtCore.QSize):
         self._mgr.iconSize = size
         self._mgr.updateIcon()
+
+    activeTab = QtCore.Property(bool, isActiveTab,setActiveTab)
+    # fixme: iconSize set could use pIconSize=xxx:QtCore.QSize
+    pIconSize= QtCore.Property(QtCore.QSize,iconSize,setIconSize)

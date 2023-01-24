@@ -3,11 +3,12 @@ import logging
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from .define import (EnumDockWidgetFeature, EnumDragState, EnumDockWidgetArea,
-                     DOCK_MANAGER_DEFAULT_CONFIG,EnumDockMgrConfigFlag)
+                     DOCK_MANAGER_DEFAULT_CONFIG, EnumDockMgrConfigFlag)
 from .floating_base import IFloatingWidget
-from .util import ( LINUX, eventFilterDecorator, qApp,evtFloatingWidgetDragStartEvent)
+from .util import (LINUX, WINDOWS, eventFilterDecorator, getQApp, evtFloatingWidgetDragStartEvent)
 from .dock_container_widget import CDockContainerWidget
 from .dock_state_reader import CDockStateReader
+
 if LINUX:
     from .linux.floating_widget_title_bar import CFloatingWidgetTitleBar
 
@@ -46,7 +47,8 @@ class FloatingDockContainerMgr:
         '''
         self._this = _this
         self.dockContainer = None
-        self.zOrderIndex = CFloatingDockContainer.Z_ORDER_COUNTER + 1
+        CFloatingDockContainer.Z_ORDER_COUNTER += 1
+        self.zOrderIndex = CFloatingDockContainer.Z_ORDER_COUNTER
 
         self.dockManager = None
         self.draggingState = EnumDragState.INACTIVE
@@ -69,7 +71,7 @@ class FloatingDockContainerMgr:
         if state == self.draggingState:
             return
         self.draggingState = state
-        qApp.postEvent(self._this, QtCore.QEvent(evtFloatingWidgetDragStartEvent))
+        getQApp().postEvent(self._this, QtCore.QEvent(QtCore.QEvent.Type(evtFloatingWidgetDragStartEvent)))
 
     def reflectCurrentWidget(self, current_widget: 'CDockWidget'):
         # Reflect the current dock widget title in the floating widget windowTitle()
@@ -80,7 +82,7 @@ class FloatingDockContainerMgr:
             self.setWindowTitle(self.floatingContainersTitle())
         # reflect CurrentWidget's icon if configured to do so, otherwise display application icon as window icon
         _current_widget_icon = current_widget.icon()
-        if EnumDockMgrConfigFlag.FloatingContainerHasWidgetIcon in DOCK_MANAGER_DEFAULT_CONFIG and _current_widget_icon is not None:
+        if EnumDockMgrConfigFlag.FloatingContainerHasWidgetIcon in DOCK_MANAGER_DEFAULT_CONFIG and not _current_widget_icon.isNull():
             self._this.setWindowIcon(_current_widget_icon)
         else:
             self._this.setWindowIcon(QtWidgets.QApplication.windowIcon())
@@ -95,15 +97,17 @@ class FloatingDockContainerMgr:
 
     def titleMouseReleaseEvent(self):
         self.setState(EnumDragState.INACTIVE)
-        if not self.dropContainer:
+        if self.dropContainer is None:
             logger.debug('title_mouse_release_event: no drop container?')
             return
 
         _dock_manager = self.dockManager
         _dock_area_overlay = _dock_manager.dockAreaOverlay()
         _container_overlay = _dock_manager.containerOverlay()
-        if any(widget.dropAreaUnderCursor() != EnumDockWidgetArea.INVALID
-               for widget in (_dock_area_overlay, _container_overlay)):
+        _da_under_da = _dock_area_overlay.dropAreaUnderCursor()
+        _da_under_c = _container_overlay.dropAreaUnderCursor()
+
+        if _da_under_da != EnumDockWidgetArea.INVALID or _da_under_c != EnumDockWidgetArea.INVALID:
             # Resize the floating widget to the size of the highlighted drop area
             # rectangle
             _overlay = _container_overlay
@@ -146,7 +150,7 @@ class FloatingDockContainerMgr:
             return
 
         if LINUX:
-            if qApp.activeModalWidget():
+            if getQApp().activeModalWidget():
                 return
         _containers = self.dockManager.dockContainers()
         _top_container = None
@@ -170,9 +174,6 @@ class FloatingDockContainerMgr:
             _dock_area_overlay.hideOverlay()
             return
 
-        logger.debug('update_drop_overlays: top container=%s name=%s',
-                     self.dropContainer, self.dropContainer.objectName())
-
         _visible_dock_areas = _top_container.visibleDockAreaCount()
         _container_overlay.setAllowedAreas(
             EnumDockWidgetArea.OUTER_DOCK_AREAS
@@ -182,7 +183,7 @@ class FloatingDockContainerMgr:
 
         _container_area = _container_overlay.showOverlay(_top_container)
         _container_overlay.enableDropPreview(_container_area != EnumDockWidgetArea.INVALID)
-        _dock_area = _top_container.dock_area_at(global_pos)
+        _dock_area = _top_container.dockAreaAt(global_pos)
 
         if _dock_area and _dock_area.isVisible() and _visible_dock_areas > 0:
             _dock_area_overlay.enableDropPreview(True)
@@ -218,8 +219,9 @@ else:
 
 
 class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
-    MOUSE_PRESSED=False
-    Z_ORDER_COUNTER=0
+    MOUSE_PRESSED = False
+    Z_ORDER_COUNTER = 0
+
     def __init__(self, *, dock_area: 'CDockAreaWidget' = None,
                  dock_widget: 'CDockWidget' = None,
                  dock_manager: 'CDockManager' = None):
@@ -245,7 +247,7 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
         self._mgr.dockManager = dock_manager
         _dock_container = CDockContainerWidget(dock_manager, self)
         self._mgr.dockContainer = _dock_container
-        _dock_container.destroy.connect(self._destroyed)
+        _dock_container.destroyed.connect(self._destroyed)
         _dock_container.sigDockAreasAdded.connect(self.onDockAreasAddedOrRemoved)
         _dock_container.sigDockAreasRemoved.connect(self.onDockAreasAddedOrRemoved)
 
@@ -272,7 +274,7 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
         # We install an event filter to detect mouse release events because we
         # do not receive mouse release event if the floating widget is behind
         # the drop overlay cross
-        qApp.installEventFilter(self)
+        getQApp().installEventFilter(self)
         if dock_area is not None:
             _dock_container.addDockArea(dock_area)
             _top_dw = self.topLevelDockWidget()
@@ -299,11 +301,20 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
             self._mgr.dockManager.removeDockContainer(_dock_container)
             self._mgr.dockManager.removeFloatingWidget(self)
 
-        qApp.removeEventFilter(self)
+        getQApp().removeEventFilter(self)
 
     def deleteLater(self):
         self._destroyed()
         super().deleteLater()
+
+    def isClosable(self):
+        return EnumDockWidgetFeature.CLOSEABLE in self._mgr.dockContainer.features()
+
+    def hasTopLevelDockWidget(self):
+        return self._mgr.dockContainer.hasTopLevelDockWidget()
+
+    def topLevelDockWidget(self):
+        return self._mgr.dockContainer.topLevelDockWidget()
 
     def onDockAreasAddedOrRemoved(self):
         logger.debug('FloatingDockContainer.onDockAreasAddedOrRemoved()')
@@ -340,7 +351,7 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
         Call this function if you explecitely want to signal that dragging has
         finished
         '''
-        logger.debug('FloatingDockContainer.finish_dragging')
+        logger.debug('FloatingDockContainer.finishDragging')
         if LINUX:
             self.setWindowOpacity(1)
             self.activateWindow()
@@ -350,12 +361,12 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
                 self._mgr.mouseEventHandler = None
         self._mgr.titleMouseReleaseEvent()
 
-
     def moveFloating(self):
         '''
         Moves the widget to a new position relative to the position given when
         startFloating() was called
         '''
+        logger.debug('FloatingDockContainer.moveFloating')
         _border_size = (self.frameSize().width() - self.size().width()) / 2
         _move_to_pos = QtGui.QCursor.pos() - self._mgr.dragStartMousePosition - QtCore.QPoint(_border_size, 0)
         self.move(_move_to_pos)
@@ -397,10 +408,12 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
 
     def moveEvent(self, event: QtGui.QMoveEvent):
         super().moveEvent(event)
-        if not self._mgr.isResizing and event.spontaneous() and self.MOUSE_PRESSED:
+        if self._mgr.draggingState == EnumDragState.MOUSE_PRESSED:
             self._mgr.setState(EnumDragState.FLOATING_WIDGET)
             self._mgr.updateDropOverlays(QtGui.QCursor.pos())
-        self._mgr.isResizing = False
+        elif self._mgr.draggingState == EnumDragState.FLOATING_WIDGET:
+            self._mgr.updateDropOverlays(QtGui.QCursor.pos())
+            QtWidgets.QApplication.setActiveWindow(self)
 
     def updateWindowTitle(self):
         '''
@@ -445,12 +458,37 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
         -------
         value : bool
         '''
-        _result = super().event(event)
-        if event.type() == QtCore.QEvent.Type.WindowActivate:
-            self.MOUSE_PRESSED = False
-        elif event.type() == QtCore.QEvent.Type.WindowDeactivate:
-            self.MOUSE_PRESSED = True
-        return _result
+        _state = self._mgr.draggingState
+        if _state == EnumDragState.INACTIVE:
+            if event.type() == QtCore.QEvent.Type.NonClientAreaMouseButtonPress:
+                logger.debug('CFloatingWidget::event Event::NonClientAreaMouseButtonPress')
+                self._mgr.dragStartPos = self.pos()
+                self._mgr.setState(EnumDragState.MOUSE_PRESSED)
+        elif _state == EnumDragState.MOUSE_PRESSED:
+            if event.type() == QtCore.QEvent.Type.NonClientAreaMouseButtonDblClick:
+                logger.debug("FloatingWidget::event QEvent::NonClientAreaMouseButtonDblClick")
+                self._mgr.setState(EnumDragState.INACTIVE)
+            elif event.type() == QtCore.QEvent.Type.Resize:
+                # If the first event after the mouse press is a resize event, then
+                # the user resizes the window instead of dragging it around.
+                # But there is one exception. If the window is maximized,
+                # then dragging the window via title bar will cause the widget to
+                # leave the maximized state. This in turn will trigger a resize event.
+                # To know, if the resize event was triggered by user via moving a
+                # corner of the window frame or if it was caused by a windows state
+                # change, we check, if we are not in maximized state.
+                if not self.isMaximized():
+                    self._mgr.setState(EnumDragState.INACTIVE)
+        elif _state == EnumDragState.FLOATING_WIDGET:
+            if event.type() == QtCore.QEvent.Type.NonClientAreaMouseButtonRelease:
+                logger.debug("FloatingWidget::event QEvent::NonClientAreaMouseButtonRelease")
+                self._mgr.titleMouseReleaseEvent()
+
+        # if event.type() == QtCore.QEvent.Type.WindowActivate:
+        #     self.MOUSE_PRESSED = False
+        # elif event.type() == QtCore.QEvent.Type.WindowDeactivate:
+        #     self.MOUSE_PRESSED = True
+        return super().event(event)
 
     def closeEvent(self, event: QtGui.QCloseEvent):
         '''
@@ -517,8 +555,8 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
 
     def show(self):
         # Prevent this window from showing in the taskbar and pager (alt+tab)
-        #xcb_add_prop(True, self.winId(), "_NET_WM_STATE", "_NET_WM_STATE_SKIP_TASKBAR")
-        #xcb_add_prop(True, self.winId(), "_NET_WM_STATE", "_NET_WM_STATE_SKIP_PAGER")
+        # xcb_add_prop(True, self.winId(), "_NET_WM_STATE", "_NET_WM_STATE_SKIP_TASKBAR")
+        # xcb_add_prop(True, self.winId(), "_NET_WM_STATE", "_NET_WM_STATE_SKIP_PAGER")
         super().show()
 
     def showEvent(self, event: QtGui.QShowEvent):
@@ -566,7 +604,6 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
             self.moveFloating()
             self.show()
 
-    @eventFilterDecorator
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
         '''
         Eventfilter
@@ -585,12 +622,17 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
         if event.type() == QtCore.QEvent.Type.MouseButtonRelease:
             logger.debug('MouseButtonRelease')
             if self._mgr.draggingState == EnumDragState.FLOATING_WIDGET:
-                qApp.removeEventFilter(self)
+                getQApp().removeEventFilter(self)
                 logger.debug('FloatingWidget.eventFilter QEvent.MouseButtonRelease')
                 self.finishDragging()
                 self._mgr.titleMouseReleaseEvent()
 
         return False
+
+    # def nativeEvent(self, event_type, message):
+    #     super().nativeEvent(event_type, message)
+    #     print('----->nativeEvent:',event_type, message)
+    #     return False
 
     def dockContainer(self) -> 'CDockContainerWidget':
         '''
@@ -602,44 +644,8 @@ class CFloatingDockContainer(FloatingWidgetBase, IFloatingWidget):
         '''
         return self._mgr.dockContainer
 
-    def isClosable(self) -> bool:
-        '''
-        This function returns true, if it can be closed. It can be closed, if
-        all dock widgets in all dock areas can be closed
-
-        Returns
-        -------
-        value : bool
-        '''
-        return EnumDockWidgetFeature.CLOSEABLE in self._mgr.dockContainer.features()
-
     def hasNativeTitleBar(self):
         return self._mgr.titleBar is None
-
-    def hasTopLevelDockWidget(self) -> bool:
-        '''
-        This function returns true, if this floating widget has only one single
-        visible dock widget in a single visible dock area. The single dock
-        widget is a real top level floating widget because no other widgets are
-        docked.
-
-        Returns
-        -------
-        value : bool
-        '''
-        return self._mgr.dockContainer.hasTopLevelDockWidget()
-
-    def topLevelDockWidget(self) -> 'CDockWidget':
-        '''
-        This function returns the first dock widget in the first dock area. If
-        the function hasSingleDockWidget() returns true, then this function
-        returns this single dock widget.
-
-        Returns
-        -------
-        value : DockWidget
-        '''
-        return self._mgr.dockContainer.topLevelDockWidget()
 
     def dockWidgets(self) -> list:
         '''

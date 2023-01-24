@@ -9,7 +9,7 @@ from .define import (EnumDockWidgetFeature, EnumDockMgrConfigFlag,
                      EnumInsertMode, EnumMinimumSizeHintMode,
                      EnumSideBarLocation)
 from .dock_components_factory import DEFAULT_COMPONENT_FACTORY
-from .util import findParent, emitTopLevelEventForWidget,setFlag
+from .util import findParent, emitTopLevelEventForWidget, setFlag
 from .floating_dock_container import CFloatingDockContainer
 
 if TYPE_CHECKING:
@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from .dock_area_widget import CDockAreaWidget
     from .dock_widget_tab import CDockWidgetTab
     from .auto_hide_tab import CAutoHideTab
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class DockWidgetMgr:
     layout: [QtWidgets.QBoxLayout, None]
     widget: [QtWidgets.QWidget, None]
     tabWidget: ['CDockWidgetTab', None]
-    features: EnumDockWidgetFeature = EnumDockWidgetFeature.DEFAULT
+    features: EnumDockWidgetFeature
     dockManager: ['CDockManager', None]
     dockArea: ['CDockAreaWidget', None]
     toggleView_action: [QtGui.QAction, None]
@@ -46,7 +45,7 @@ class DockWidgetMgr:
     toolBarIconSizeFloating: QtCore.QSize
     isFloatingTopLevel: bool
     titleBarActions: list
-    minimumSizeHintMode: EnumMinimumSizeHintMode = EnumMinimumSizeHintMode.FROM_DOCK_WIDGET
+    minimumSizeHintMode: EnumMinimumSizeHintMode
     factory: [WidgetFactory, None] = None
     sideTabWidget: 'CAutoHideTab'
 
@@ -55,7 +54,7 @@ class DockWidgetMgr:
         self.layout = None
         self.widget = None
         self.tabWidget = None
-        self.features = EnumDockWidgetFeature.ALL
+        self.features = EnumDockWidgetFeature.DEFAULT
         self.dockManager = None
         self.dockArea = None
         self.toggleViewAction = None
@@ -71,7 +70,6 @@ class DockWidgetMgr:
         self.titleBarActions = []
         self.minimumSizeHintMode = EnumMinimumSizeHintMode.FROM_DOCK_WIDGET
         self.factory = None
-        self.sideTabWidget = None
 
     def showDockWidget(self):
         '''
@@ -79,13 +77,13 @@ class DockWidgetMgr:
         '''
         if not self.widget:
             if not self.createWidgetFromFactory():
-                assert EnumDockWidgetFeature.DELETE_CONTENT_ON_CLOSE in self.features
+                assert EnumDockWidgetFeature.DELETE_CONTENT_ON_CLOSE not in self.features, "DeleteContentOnClose flag was set, but the widget factory is missing or it doesnt return a valid QWidget. "
                 return
         if not self.dockArea:
-            floating_widget = CFloatingDockContainer(dock_widget=self._this)
-            floating_widget.resize(self.widget.sizeHint() if self.widget else self._this.sizeHint())
+            _floating_widget = CFloatingDockContainer(dock_widget=self._this)
+            _floating_widget.resize(self.widget.sizeHint() if self.widget else self._this.sizeHint())
             self.tabWidget.show()
-            floating_widget.show()
+            _floating_widget.show()
         else:
             self.dockArea.setCurrentDockWidget(self._this)
             self.dockArea.toggleView(True)
@@ -98,6 +96,8 @@ class DockWidgetMgr:
             if _container.isFloating():
                 _floating_w = findParent(CFloatingDockContainer, _container)
                 _floating_w.show()
+            # If this widget is pinned and there are no opened dock widgets, unpin the auto hide widget by moving it's contents to parent container
+            # While restoring state, opened dock widgets are not valid
             if len(_container.openedDockWidgets()) == 0 and self.dockArea.isAutoHide() and not self.dockManager.isRestoringState():
                 self.dockArea.autoHideDockContainer().moveContentsToParent()
 
@@ -124,7 +124,7 @@ class DockWidgetMgr:
         we don't need to change the current tab if the
 	    current dock widget is not the one being closed
         """
-        if self.dockArea.currentDockWidget() != self._this:
+        if self.dockArea.currentDockWidget() is not self._this:
             return
 
         _next_dock_widget = self.dockArea.nextOpenDockWidget(self._this)
@@ -171,7 +171,7 @@ class DockWidgetMgr:
     def createWidgetFromFactory(self):
         if EnumDockWidgetFeature.DELETE_CONTENT_ON_CLOSE not in self.features:
             return False
-        if not self.factory:
+        if self.factory is None:
             return False
         _w = self.factory.createWidget(self._this)
         if _w is None:
@@ -184,16 +184,16 @@ class CDockWidget(QtWidgets.QFrame):
     # This signal is emitted if the dock widget is opened or closed
     sigViewToggled = QtCore.Signal(bool)
     # This signal is emitted if the dock widget is closed
-    closed = QtCore.Signal()
+    sigClosed = QtCore.Signal()
     # This signal is emitted if the window title of this dock widget changed
-    titleChanged = QtCore.Signal(str)
+    sigTitleChanged = QtCore.Signal(str)
     # This signal is emitted when the floating property changes. The topLevel
     # parameter is true if the dock widget is now floating; otherwise it is
     # false.
-    topLevelChanged = QtCore.Signal(bool)
-    featuresChanged = QtCore.Signal(EnumDockWidgetFeature)
-    visibilityChanged = QtCore.Signal(bool)
-    closeRequested = QtCore.Signal()
+    sigTopLevelChanged = QtCore.Signal(bool)
+    sigFeaturesChanged = QtCore.Signal(EnumDockWidgetFeature)
+    sigVisibilityChanged = QtCore.Signal(bool)
+    sigCloseRequested = QtCore.Signal()
 
     def __init__(self, title: str, parent: QtWidgets.QWidget = None):
         '''
@@ -228,6 +228,8 @@ class CDockWidget(QtWidgets.QFrame):
         self._mgr.toggleViewAction.setCheckable(True)
         self._mgr.toggleViewAction.triggered.connect(self.toggleView)
         self.setToolbarFloatingStyle(False)
+        if EnumDockMgrConfigFlag.FocusHighlighting in DOCK_MANAGER_DEFAULT_CONFIG:
+            self.setFocusPolicy(QtCore.Qt.FocusPolicy.ClickFocus)
 
     def __repr__(self):
         return f'<{self.__class__.__name__} title={self.windowTitle()!r}>'
@@ -238,7 +240,7 @@ class CDockWidget(QtWidgets.QFrame):
         _action.setChecked(checked)
         _action.blockSignals(False)
 
-    def setWidget(self, widget: QtWidgets.QWidget, insert_mode: EnumInsertMode=EnumInsertMode.AUTO_SCROLL_AREA):
+    def setWidget(self, widget: QtWidgets.QWidget, insert_mode: EnumInsertMode = EnumInsertMode.AUTO_SCROLL_AREA):
         '''
                 Sets the widget for the dock widget to widget. The InsertMode defines
                 how the widget is inserted into the dock widget. The content of a dock
@@ -264,7 +266,7 @@ class CDockWidget(QtWidgets.QFrame):
                 '''
         if self._mgr.widget:
             self.takeWidget()
-        _is_scroll_area = isinstance(widget, QtWidgets.QScrollArea)
+        _is_scroll_area = isinstance(widget, QtWidgets.QAbstractScrollArea)
         if _is_scroll_area or EnumInsertMode.FORCE_NO_SCROLL_AREA == insert_mode:
             self._mgr.layout.addWidget(widget)
             if _is_scroll_area:
@@ -282,6 +284,21 @@ class CDockWidget(QtWidgets.QFrame):
             del self._mgr.factory
         self._mgr.factory = WidgetFactory(create_widget, insert_mode)
 
+    def takeWidget(self):
+        _w = None
+        if self._mgr.scrollArea is not None:
+            self._mgr.layout.removeWidget(self._mgr.scrollArea)
+            _w = self._mgr.scrollArea.takeWidget()
+            self._mgr.scrollArea = None
+            self._mgr.widget = None
+        elif self._mgr.widget is not None:
+            self._mgr.layout.removeWidget(self._mgr.widget)
+            _w = self._mgr.widget
+            self._mgr.widget = None
+        if _w is not None:
+            _w.setParent(None)
+        return _w
+
     def autoHideDockContainer(self):
         if self._mgr.dockArea is None:
             return None
@@ -294,7 +311,7 @@ class CDockWidget(QtWidgets.QFrame):
         if self._mgr.features == features:
             return
         self._mgr.features = features
-        self.featuresChanged.emit(self._mgr.features)
+        self.sigFeaturesChanged.emit(self._mgr.features)
         self._mgr.tabWidget.onDockWidgetFeaturesChanged()
         if self.dockAreaWidget():
             self.dockAreaWidget().onDockWidgetFeaturesChanged()
@@ -318,7 +335,7 @@ class CDockWidget(QtWidgets.QFrame):
 
     def floatingDockContainer(self):
         _dc = self.dockContainer()
-        return _dc.floatingWidget() if _dc is not None else _dc
+        return _dc.floatingWidget() if _dc is not None else None
 
     def dockAreaWidget(self):
         return self._mgr.dockArea
@@ -330,7 +347,12 @@ class CDockWidget(QtWidgets.QFrame):
         self._mgr.sideTabWidget = side_tab
 
     def isAutoHide(self):
-        return self._mgr.sideTabWidget is not None
+        # modified: the widget remove from layout still referenced by self._mgr.sideTabWidget
+        if self._mgr.sideTabWidget is None:
+            return False
+        else:
+            return self._mgr.sideTabWidget.sideBar() is not None
+        # return self._mgr.sideTabWidget is not None
 
     def isFloating(self):
         if not self.isInFloatingContainer():
@@ -341,7 +363,7 @@ class CDockWidget(QtWidgets.QFrame):
         _c = self.dockContainer()
         if _c is None:
             return False
-        if not _c.isFloating:
+        if not _c.isFloating():
             return False
         return True
 
@@ -390,7 +412,7 @@ class CDockWidget(QtWidgets.QFrame):
         if _button_style != self._mgr.toolBar.toolButtonStyle():
             self._mgr.toolBar.setToolButtonStyle(_button_style)
 
-    def setDockArea(self, dock_area: ['CDockAreaWidget', None]):
+    def setDockArea(self, dock_area_widget: ['CDockAreaWidget', None]):
         '''
         If this dock widget is inserted into a dock area, the dock area will be
         registered on this widget via this function. If a dock widget is
@@ -401,22 +423,9 @@ class CDockWidget(QtWidgets.QFrame):
         ----------
         dock_area : DockAreaWidget
         '''
-        self._mgr.dock_area = dock_area
-        self._mgr.toggleViewAction.setChecked(dock_area is not None and not self.isClosed())
-        self.setParent(dock_area)
-
-    def set_toggle_view_action_checked(self, checked: bool):
-        '''
-        This function changes the toggle view action without emitting any signal
-
-        Parameters
-        ----------
-        checked : bool
-        '''
-        action = self._mgr.toggleViewAction
-        action.blockSignals(True)
-        action.setChecked(checked)
-        action.blockSignals(False)
+        self._mgr.dockArea = dock_area_widget
+        self._mgr.toggleViewAction.setChecked(dock_area_widget is not None and not self.isClosed())
+        self.setParent(dock_area_widget)
 
     def saveState(self, stream: QtCore.QXmlStreamWriter):
         '''
@@ -453,6 +462,11 @@ class CDockWidget(QtWidgets.QFrame):
                      self)
         _tab_widget.setParent(self)
 
+    def emitTopLevelEventForWidget(self, top_level_dock_widget: 'CDockWidget', floating: bool):
+        if top_level_dock_widget:
+            top_level_dock_widget.dockAreaWidget().updateTitleBarVisibility()
+            top_level_dock_widget.emitTopLevelChanged(floating)
+
     def emitTopLevelChanged(self, floating: bool):
         '''
         Use this function to emit a top level changed event. Do never use emit
@@ -465,7 +479,7 @@ class CDockWidget(QtWidgets.QFrame):
         '''
         if floating != self._mgr.isFloatingTopLevel:
             self._mgr.isFloatingTopLevel = floating
-            self.topLevelChanged.emit(self._mgr.isFloatingTopLevel)
+            self.sigTopLevelChanged.emit(self._mgr.isFloatingTopLevel)
 
     def setClosedState(self, closed: bool):
         '''
@@ -488,7 +502,7 @@ class CDockWidget(QtWidgets.QFrame):
         open_ : bool
         '''
         _dock_container = self.dockContainer()
-        _top_level_dock_widget_before = (_dock_container.top_level_dock_widget()
+        _top_level_dock_widget_before = (_dock_container.topLevelDockWidget()
                                          if _dock_container else None)
         self._mgr.closed = not open_
         if open_:
@@ -510,17 +524,17 @@ class CDockWidget(QtWidgets.QFrame):
         # this dock widget was unassigned before the call to showDockWidget() then
         # it has a dock container now
         _dock_container = self.dockContainer()
-        _top_level_dock_widget_after = (_dock_container.top_level_dock_widget()
+        _top_level_dock_widget_after = (_dock_container.topLevelDockWidget()
                                         if _dock_container
                                         else None)
         emitTopLevelEventForWidget(_top_level_dock_widget_after, True)
         if _dock_container is not None:
-            floating_container = _dock_container.floatingWidget()
-            if floating_container is not None:
-                floating_container.updateWindowTitle()
+            _floating_container = _dock_container.floatingWidget()
+            if _floating_container is not None:
+                _floating_container.updateWindowTitle()
 
         if not open_:
-            self.closed.emit()
+            self.sigClosed.emit()
 
         self.sigViewToggled.emit(open_)
 
@@ -554,15 +568,13 @@ class CDockWidget(QtWidgets.QFrame):
 
     def closeDockWidgetInternal(self, force=False):
         if not force:
-            self.closeRequested.emit()
+            self.sigCloseRequested.emit()
 
         if not force and EnumDockWidgetFeature.CUSTOM_CLOSE_HANDLING in self.features():
             return False
         if EnumDockWidgetFeature.DELETE_ON_CLOSE in self.features():
-            """
-            If the dock widget is floating, then we check if we also need to
-		    delete the floating widget
-            """
+            # If the dock widget is floating, then we check if we also need to
+            # delete the floating widget
             if self.isFloating():
                 _fw = findParent(CFloatingDockContainer, self)
                 if _fw is not None:
@@ -573,28 +585,10 @@ class CDockWidget(QtWidgets.QFrame):
             if self._mgr.dockArea and self._mgr.dockArea.isAutoHide():
                 self._mgr.dockArea.autoHideDockContainer().cleanupAndDelete()
             self.deleteDockWidget()
-            self.closed.emit()
+            self.sigClosed.emit()
         else:
             self.toggleView(False)
         return True
-
-    def takeWidget(self):
-        '''
-        Remove the widget from the dock, giving ownership back to the caller
-        '''
-        if self._mgr.scrollArea:
-            self._mgr.layout.removeWidget(self._mgr.scrollArea)
-            _w = self._mgr.scrollArea.takeWidget()
-            del self._mgr.scrollArea
-            self._mgr.scrollArea = None
-            self._mgr.widget = None
-        else:
-            self._mgr.layout.removeWidget(self._mgr.widget)
-            _w = self._mgr.widget
-            self._mgr.widget = None
-        if _w:
-            _w.setParent(None)
-        return _w
 
     def widget(self) -> 'CDockWidget':
         '''
@@ -822,7 +816,7 @@ class CDockWidget(QtWidgets.QFrame):
 
         self._mgr.toolBar = tool_bar
         self._mgr.layout.insertWidget(0, self._mgr.toolBar)
-        self.topLevelChanged.connect(self.setToolbarFloatingStyle)
+        self.sigTopLevelChanged.connect(self.setToolbarFloatingStyle)
         self.setToolbarFloatingStyle(self.isFloating())
 
     def setToolBarStyle(self, style: QtCore.Qt.ToolButtonStyle, state: EnumWidgetState):
@@ -929,9 +923,9 @@ class CDockWidget(QtWidgets.QFrame):
         value : bool
         '''
         if e.type() == QtCore.QEvent.Type.Hide:
-            self.visibilityChanged.emit(False)
+            self.sigVisibilityChanged.emit(False)
         elif e.type() == QtCore.QEvent.Type.Show:
-            self.visibilityChanged.emit(self.geometry().right() >= 0 and self.geometry().bottom() >= 0)
+            self.sigVisibilityChanged.emit(self.geometry().right() >= 0 and self.geometry().bottom() >= 0)
         elif e.type() == QtCore.QEvent.Type.WindowTitleChange:
             _title = self.windowTitle()
             if self._mgr.tabWidget:
@@ -946,7 +940,7 @@ class CDockWidget(QtWidgets.QFrame):
             _fw = self.floatingDockContainer()
             if _fw:
                 _fw.updateWindowTitle()
-            self.titleChanged.emit(_title)
+            self.sigTitleChanged.emit(_title)
 
         return super().event(e)
 
@@ -1016,8 +1010,8 @@ class CDockWidget(QtWidgets.QFrame):
             _fw.raise_()
             _fw.activateWindow()
 
-    def setAutoHide(self, enable, location: EnumSideBarLocation):
-        if not EnumAutoHideFlag.AutoHideFeatureEnabled in AUTO_HIDE_DEFAULT_CONFIG:
+    def setAutoHide(self, enable, location: EnumSideBarLocation = EnumSideBarLocation.RIGHT):
+        if EnumAutoHideFlag.AutoHideFeatureEnabled not in AUTO_HIDE_DEFAULT_CONFIG:
             return
         if self.isAutoHide() == enable:
             return
@@ -1028,7 +1022,7 @@ class CDockWidget(QtWidgets.QFrame):
             _area = _da.calculateSideTabBarArea() if location == EnumSideBarLocation.NONE else location
             self.dockContainer().createAndSetupAutoHideContainer(_area, self)
 
-    def toggleAutoHide(self, location: EnumSideBarLocation):
-        if not EnumAutoHideFlag.AutoHideFeatureEnabled in AUTO_HIDE_DEFAULT_CONFIG:
+    def toggleAutoHide(self, location: EnumSideBarLocation = EnumSideBarLocation.RIGHT):
+        if EnumAutoHideFlag.AutoHideFeatureEnabled not in AUTO_HIDE_DEFAULT_CONFIG:
             return
         self.setAutoHide(not self.isAutoHide(), location)

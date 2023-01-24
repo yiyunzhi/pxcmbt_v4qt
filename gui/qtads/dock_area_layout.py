@@ -1,7 +1,6 @@
 import logging
 from typing import List
-from PySide6 import QtCore,QtGui,QtWidgets
-
+from PySide6 import QtCore, QtGui, QtWidgets
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +8,7 @@ logger = logging.getLogger(__name__)
 class CDockAreaLayout:
     _parentLayout: QtWidgets.QBoxLayout
     _widgets: List[QtWidgets.QWidget]
-    _currentWidget: [QtWidgets.QWidget,None]
+    _currentWidget: [QtWidgets.QWidget, None]
     _currentIndex: int
 
     def __init__(self, parent_layout: QtWidgets.QBoxLayout):
@@ -45,7 +44,7 @@ class CDockAreaLayout:
         index : int
         widget : QWidget
         '''
-        logger.debug('%s setParent None', widget)
+        logger.debug('%s insertWidget: %s setParent None', self.__class__.__name__, widget)
         widget.setParent(None)
         if index < 0:
             index = len(self._widgets)
@@ -64,16 +63,17 @@ class CDockAreaLayout:
         ----------
         widget : QWidget
         '''
-        if self.currentWidget() == widget:
+        if self.currentWidget() is widget:
             _layout_item = self._parentLayout.takeAt(1)
             if _layout_item:
-                widget = _layout_item.widget()
-                logger.debug('%s setParent None', widget)
-                widget.setParent(None)
+                _widget = _layout_item.widget()
+                logger.debug('removeWidget: %s setParent None', _widget)
+                _widget.setParent(None)
 
             self._currentWidget = None
             self._currentIndex = -1
-
+        elif self.indexOf(widget) < self._currentIndex:
+            self._currentIndex -= 1
         self._widgets.remove(widget)
 
     def currentWidget(self) -> QtWidgets.QWidget:
@@ -108,7 +108,7 @@ class CDockAreaLayout:
         _layout_item = self._parentLayout.takeAt(1)
         if _layout_item:
             _widget = _layout_item.widget()
-            logger.debug('%s setParent None', _widget)
+            logger.debug('setCurrentIndex: %s setParent None', _widget)
             _widget.setParent(None)
 
         self._parentLayout.addWidget(_next)

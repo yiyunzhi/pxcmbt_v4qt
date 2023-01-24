@@ -1,0 +1,441 @@
+/***app***/
+#modeSelToolBar {
+    min-width: 48px;
+}
+#modeSelToolBar QToolButton{
+    color:{{colors.primaryTextColor}};
+    min-width:32px;
+    min-height:36px;
+    margin-right:6px;
+}
+#modeSelToolBar QToolButton::menu-indicator {
+    image: url(icon:/primary/rightarrow.svg);
+    subcontrol-origin: margin;
+    subcontrol-position: center right;
+}
+#modeSelToolBar QToolButton::menu-indicator:open {
+    image: url(icon:/primary/rightarrow.svg);
+}
+
+/***qtads***/
+/*****************************************************************************
+ * CDockContainerWidget
+ *****************************************************************************/
+CDockContainerWidget {
+    background-color: {{colors.secondaryDarkColor}};
+    border:none;
+}
+
+/*****************************************************************************
+ * CDockSplitter
+ *****************************************************************************/
+CDockSplitter::handle {
+	/* uncomment the following line if you would like to change the size of
+       the splitter handles */
+	height: 5px;
+ }
+CDockSplitter::handle:horizontal {
+  image: url(icon:/primary/splitter-horizontal.svg);
+}
+
+CDockSplitter::handle:vertical {
+  image: url(icon:/primary/splitter-vertical.svg);
+}
+CDockSplitter::handle:pressed {
+	background-color: {{colors.primaryColor|opacity(0.4)}};
+}
+
+CDockContainerWidget > QSplitter {
+	background-color: transparent;
+    border: none;
+}
+
+/*****************************************************************************
+ * CDockAreaWidget
+ *****************************************************************************/
+CDockAreaWidget {
+	background: {{colors.secondaryDarkColor}};
+    border:none;
+}
+
+
+CDockAreaTitleBar {
+	background: transparent;
+	border:none;
+	border-bottom: 2px solid {{colors.primaryColor}};
+	border-radius: 0px;
+	padding-bottom: 0px;
+	max-height:24px;
+}
+
+CDockAreaWidget[focused="true"] CDockAreaTitleBar {
+	border-bottom: 2px solid palette(highlight);
+}
+
+CTitleBarButton {
+	padding: 0px 0px;
+	border: none;
+	background-color: transparent;
+}
+
+CDockAreaTitleBar CTitleBarButton:hover{
+    border: 1px solid palette(window);
+}
+
+CDockAreaTitleBar CTitleBarButton:pressed{
+    border: 1px solid palette(window);
+}
+/*todo*/
+#tabsMenuButton::menu-indicator {
+	image: none;
+}
+
+
+#dockAreaCloseButton {
+	qproperty-icon: url(icon:/primary/tab_close.svg),
+		url(icon:/disabled/tab_close.svg) disabled;
+	qproperty-iconSize: 14px;
+}
+
+#detachGroupButton {
+	qproperty-icon: url(icon:/primary/float.svg),
+		url(icon:/disabled/float.svg) disabled;
+	qproperty-iconSize: 14px;
+}
+#undockButton {
+	qproperty-icon: url(icon:/primary/float.svg),
+		url(icon:/disabled/float.svg) disabled;
+	qproperty-iconSize: 14px;
+}
+
+#tabsMenuButton {
+	qproperty-icon: url(icon:/primary/downarrow.svg),
+		url(icon:/disabled/downarrow.svg) disabled;
+	qproperty-iconSize: 14px;
+}
+/*****************************************************************************
+ * CDockWidgetTab
+ *****************************************************************************/
+CDockWidgetTab {
+    color: {{colors.secondaryTextColor}};
+	background: {{colors.secondaryLightColor|opacity(0.5)}};
+	border-color: palette(light);
+	border-style: solid;
+	border-width: 0 1px 0 0;
+	padding: 0 0px;
+	border-radius: 0px;
+}
+
+CDockWidgetTab[activeTab="true"] {
+	/*background: qlineargradient(spread : pad, x1 : 0, y1 : 0, x2 : 0, y2 : 0.5, stop : 0.2
+		palette(dark), stop:1 palette(mid));*/
+	/*border-bottom: 2px solid palette(highlight);*/
+	background: {{colors.secondaryColor}};
+}
+
+CDockWidgetTab QLabel {
+	color: {{colors.secondaryTextColor}};
+	font-size: 12px;
+	padding-bottom:4px;
+}
+
+CDockWidgetTab[activeTab="true"] QLabel {
+	color: {{colors.secondaryTextColor}};
+}
+
+
+#tabCloseButton {
+	background: none;
+	border: none;
+	border-radius: 0;
+	padding: 0px 0px;
+	height:16px;
+	qproperty-icon: url(icon:/primary/tab_close.svg),
+		url(icon:/disabled/tab_close.svg) disabled;
+	qproperty-iconSize: 13px;
+}
+
+#tabCloseButton:hover {
+	border: 1px solid rgba(0, 0, 0, 32);
+}
+
+#tabCloseButton:pressed {
+   border: 1px solid rgba(0, 0, 0, 32);
+}
+
+/* Focus related styling */
+CDockWidgetTab[focused="true"] {
+	background: palette(highlight);
+	border-color: palette(highlight);
+}
+
+CDockWidgetTab[focused="true"] > #tabCloseButton {
+    background: none;
+	border: none;
+	border-radius: 0;
+	padding: 0px 0px;
+	height:16px;
+	qproperty-icon: url(icon:/primary/tab_close.svg);
+	qproperty-iconSize: 13px;
+}
+
+CDockWidgetTab[focused="true"] > #tabCloseButton:hover {
+	background: rgba(255, 255, 255, 48);
+}
+
+CDockWidgetTab[focused="true"] > #tabCloseButton:pressed {
+	background: rgba(255, 255, 255, 92);
+}
+
+CDockWidgetTab[focused="true"] QLabel {
+	color: palette(light);
+}
+
+
+
+/*****************************************************************************
+ * CDockWidget
+ *****************************************************************************/
+CDockWidget {
+	background: {{colors.secondaryDarkColor|opacity(0.5)}};
+	border-color: palette(mid);
+	border-style: solid;
+	border-radius: 0px;
+	border-width: 1px;
+}
+
+
+QScrollArea#dockWidgetScrollArea {
+	padding: 0px;
+	border: none;
+}
+
+
+
+/*****************************************************************************
+ *
+ * Styling of auto hide functionality
+ *
+ *****************************************************************************/
+
+
+/*****************************************************************************
+ * CAutoHideTab
+ *****************************************************************************/
+CAutoHideTab {
+	qproperty-iconSize: 16px 16px;/* this is optional in case you would like to change icon size*/
+	background: none;
+	text-transform: none;
+	font-weight: normal;
+	border: none;
+	border-radius:0px;
+	padding-left: 4px;
+	padding-right: 0px;
+	text-align: center;
+	height: {{28|density(densityScale, border=0)}}px;
+	min-height: 16px;
+	padding-bottom: 2px;
+	font-size:12px;
+}
+
+
+CAutoHideTab:hover
+{
+	color: palette(highlight);
+}
+
+
+CAutoHideTab[pIconOnly="false"][eSideBarLocation="0"],
+CAutoHideTab[pIconOnly="false"][eSideBarLocation="2"]  {
+	border-top: 4px solid palette(light);
+}
+
+
+CAutoHideTab[pIconOnly="false"][eSideBarLocation="1"],
+CAutoHideTab[pIconOnly="false"][eSideBarLocation="3"] {
+	border-bottom: 4px solid palette(light);
+}
+
+
+
+CAutoHideTab:hover[pIconOnly="false"][eSideBarLocation="0"],
+CAutoHideTab:hover[pIconOnly="false"][eSideBarLocation="2"],
+CAutoHideTab[pIconOnly="false"][eSideBarLocation="0"][pActivTab="true"],
+CAutoHideTab[pIconOnly="false"][eSideBarLocation="2"][pActivTab="true"]  {
+	border-top: 4px solid palette(highlight);
+}
+
+
+CAutoHideTab:hover[pIconOnly="false"][eSideBarLocation="1"],
+CAutoHideTab:hover[pIconOnly="false"][eSideBarLocation="3"],
+CAutoHideTab[pIconOnly="false"][eSideBarLocation="1"][pActivTab="true"],
+CAutoHideTab[pIconOnly="false"][eSideBarLocation="3"][pActivTab="true"] {
+	border-bottom: 4px solid palette(highlight);
+}
+
+
+/**
+ * Auto hide tabs with icon only
+ */
+CAutoHideTab[pIconOnly="true"][eSideBarLocation="0"] {
+	border-top: 4px solid palette(light);
+}
+
+CAutoHideTab[pIconOnly="true"][eSideBarLocation="1"] {
+	border-left: 4px solid palette(light);
+}
+
+CAutoHideTab[pIconOnly="true"][eSideBarLocation="2"] {
+	border-right: 6px solid palette(light);
+}
+
+CAutoHideTab[pIconOnly="true"][eSideBarLocation="3"] {
+	border-bottom: 6px solid palette(light);
+}
+
+
+/**
+ * Auto hide tabs with icon only hover
+ */
+CAutoHideTab:hover[pIconOnly="true"][eSideBarLocation="0"],
+CAutoHideTab[pIconOnly="true"][eSideBarLocation="0"][pActivTab="true"] {
+	border-top: 4px solid palette(highlight);
+}
+
+CAutoHideTab:hover[pIconOnly="true"][eSideBarLocation="1"],
+CAutoHideTab[pIconOnly="true"][eSideBarLocation="1"][pActivTab="true"] {
+	border-left: 4px solid palette(highlight);
+}
+
+CAutoHideTab:hover[pIconOnly="true"][eSideBarLocation="2"],
+CAutoHideTab[pIconOnly="true"][eSideBarLocation="2"][pActivTab="true"] {
+	border-right: 4px solid palette(highlight);
+}
+
+CAutoHideTab:hover[pIconOnly="true"][eSideBarLocation="3"],
+CAutoHideTab[pIconOnly="true"][eSideBarLocation="3"][pActivTab="true"] {
+	border-bottom: 4px solid palette(highlight);
+}
+
+
+
+/*****************************************************************************
+ * CAutoHideSideBar
+ *****************************************************************************/
+CAutoHideSideBar{
+	/*background: palette(window);*/
+	background: {{colors.secondaryDarkColor|opacity(0.2)}};
+	border-radius: 0px;
+	border: none;
+	qproperty-spacing: 12;
+}
+
+#sideTabsContainerWidget {
+	background: transparent;
+}
+
+
+CAutoHideSideBar[eSideBarLocation="0"] {
+	border-bottom: 1px solid palette(dark);
+}
+
+CAutoHideSideBar[eSideBarLocation="1"] {
+	border-right: 1px solid palette(dark);
+}
+
+CAutoHideSideBar[eSideBarLocation="2"] {
+	border-left: 1px solid palette(dark);
+}
+
+CAutoHideSideBar[eSideBarLocation="3"] {
+	border-top: 1px solid palette(dark);
+}
+
+
+/*****************************************************************************
+ * CAutoHideDockContainer
+ *****************************************************************************/
+CAutoHideDockContainer {
+	background: palette(window);
+}
+
+
+CAutoHideDockContainer CDockAreaTitleBar {
+	background: palette(highlight);
+	padding: 0px;
+	border: none;
+}
+
+
+/*
+ * This is required because the CDockAreaWidget[focused="true"] will
+ * overwrite the CAutoHideDockContainer CDockAreaTitleBar rule
+ */
+CAutoHideDockContainer CDockAreaWidget[focused="true"] CDockAreaTitleBar {
+	background: palette(highlight);
+	padding: 0px;
+	border: none;
+}
+
+
+#autoHideTitleLabel {
+	padding-left: 4px;
+	color: palette(light);
+}
+
+
+/*****************************************************************************
+ * CAutoHideDockContainer titlebar buttons
+ *****************************************************************************/
+#dockAreaAutoHideButton {
+	qproperty-icon: url(icon:/primary/vs-pin-button.svg);
+	qproperty-iconSize: 16px;
+}
+
+CAutoHideDockContainer #dockAreaAutoHideButton {
+	qproperty-icon: url(icon:/primary/vs-pin-button-pinned-focused.svg);
+	qproperty-iconSize: 16px;
+}
+
+
+CAutoHideDockContainer #dockAreaCloseButton{
+	qproperty-icon: url(icon:/primary/close-button-focused.svg)
+}
+
+
+CAutoHideDockContainer CTitleBarButton:hover {
+	border: 1px solid {{colors.secondaryLightColor}};
+}
+
+CAutoHideDockContainer CTitleBarButton:pressed {
+	border: 1px solid {{colors.secondaryLightColor}};
+}
+
+/*****************************************************************************
+ * CAutoHideDockContainer Titlebar and Buttons
+ *****************************************************************************/
+
+
+/*****************************************************************************
+ * CResizeHandle
+ *****************************************************************************/
+CResizeHandle {
+	background: palette(window);
+}
+
+
+CAutoHideDockContainer[eSideBarLocation="0"] CResizeHandle {
+	border-top: 1px solid palette(dark);
+}
+
+CAutoHideDockContainer[eSideBarLocation="1"] CResizeHandle {
+	border-left: 1px solid palette(dark);
+}
+
+CAutoHideDockContainer[eSideBarLocation="2"] CResizeHandle {
+	border-right: 1px solid palette(dark);
+}
+
+CAutoHideDockContainer[eSideBarLocation="3"] CResizeHandle {
+	border-top: 1px solid palette(dark);
+}

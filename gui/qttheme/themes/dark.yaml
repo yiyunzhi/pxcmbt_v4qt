@@ -1,0 +1,18 @@
+# todo: add light, dark
+
+colors:
+  #primaryColor: '#ffd740'
+  primaryColor: '#0098a1'
+  #primaryLightColor: '#ffff74'
+  primaryLightColor: '#00C0D5'
+  secondaryColor: '#232629'
+  secondaryLightColor: '#4f5b62'
+  secondaryDarkColor: '#31363b'
+  primaryTextColor: '#000000'
+  secondaryTextColor: '#dee1e6'
+#font:
+extra:
+  danger: '#dc3545'
+  warning: '#ffc107'
+  success: '#ffc400'
+  qMenuHeight: 32

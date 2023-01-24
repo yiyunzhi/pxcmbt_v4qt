@@ -4,7 +4,8 @@ import functools
 from typing import Optional, Any, Union, Type, TYPE_CHECKING
 from PySide6 import QtGui, QtCore, QtWidgets, __version__ as QT_VERSION
 
-from .define import EnumRepolishChildOptions
+from .define import EnumRepolishChildOptions,EnumADSIcon
+from .icon_provider import CIconProvider
 
 if TYPE_CHECKING:
     from .dock_splitter import CDockSplitter
@@ -17,11 +18,12 @@ WINDOWS = sys.platform == 'win32'
 
 evtFloatingWidgetDragStartEvent = QtCore.QEvent.registerEventType()
 evtDockedWidgetDragStartEvent = QtCore.QEvent.registerEventType()
+ADS_ICON_PROVIDER = CIconProvider()
 
 
 def testFlag(flags, flag):
     if type(flags) != type(flag):
-        raise Warning('impossible')
+        raise Warning('testFlag compare impossible')
     if isinstance(flags, int):
         return (flags & flag) == flag
     elif isinstance(flags, enum.IntFlag):
@@ -36,7 +38,8 @@ def setFlag(flags, flag, on):
     return flags
 
 
-qApp = QtWidgets.QApplication.instance()
+def getQApp():
+    return QtWidgets.QApplication.instance()
 
 
 def emitTopLevelEventForWidget(widget: Optional['CDockWidget'], floating: bool):
@@ -109,29 +112,33 @@ def makeIconPair(style, parent, standard_pixmap,
     return icon
 
 
-def setButtonIcon(style: QtWidgets.QStyle, button: QtWidgets.QAbstractButton,
-                  standard_pixmap: QtWidgets.QStyle.StandardPixmap) -> QtGui.QIcon:
+def setButtonIcon(button: QtWidgets.QAbstractButton,
+                  standard_pixmap: QtWidgets.QStyle.StandardPixmap, icon_id: EnumADSIcon):
     '''
     Set a button icon
 
     Parameters
     ----------
-    style : QStyle
     button : QAbstractButton
     standard_pixmap: QStyle.StandardPixmap
-
+    icon_id: int
     Returns
     -------
     icon : QIcon
     '''
+    _icon = ADS_ICON_PROVIDER.customIcon(icon_id)
+    if _icon is not None:
+        button.setIcon(_icon)
+        return
+    else:
+        _icon = QtGui.QIcon()
     if LINUX:
-        icon = style.standardIcon(standard_pixmap)
-        button.setIcon(icon)
-        return icon
-
-    return makeIconPair(
-        style, parent=button, standard_pixmap=standard_pixmap,
-        transparent_role=QtGui.QIcon.Mode.Disabled)
+        _icon = button.style().standardIcon(standard_pixmap)
+        button.setIcon(_icon)
+    _normal_pm = button.style().standardPixmap(standard_pixmap, None, button)
+    _icon.addPixmap(createTransparentPixmap(_normal_pm, 0.25), QtGui.QIcon.Mode.Disabled)
+    _icon.addPixmap(_normal_pm, QtGui.QIcon.Mode.Normal)
+    button.setIcon(_icon)
 
 
 def hideEmptyParentSplitters(splitter: 'CDockSplitter'):
@@ -147,10 +154,10 @@ def hideEmptyParentSplitters(splitter: 'CDockSplitter'):
         if not splitter.hasVisibleContent():
             splitter.hide()
 
-        splitter = findParent(CDockSplitter, splitter)
+        splitter = findParent('CDockSplitter', splitter)
 
 
-def findParent(parent_type:[type,str], widget):
+def findParent(parent_type: [type, str], widget):
     '''
     Searches for the parent widget of the given type.
     Returns the parent widget of the given widget or 0 if the widget is not
@@ -160,10 +167,12 @@ def findParent(parent_type:[type,str], widget):
     the current dock widget has a parent. All dock widgets that are not the
     current dock widget in a dock area have no parent.
     '''
+    import inspect
+
     _parent_widget = widget.parentWidget()
     while _parent_widget:
-        if isinstance(parent_type,str):
-            if _parent_widget.__class__.__name__==parent_type:
+        if isinstance(parent_type, str):
+            if _parent_widget.__class__.__base__.__name__ == parent_type or _parent_widget.__class__.__name__ == parent_type:
                 return _parent_widget
         else:
             if isinstance(_parent_widget, parent_type):

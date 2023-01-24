@@ -14,16 +14,16 @@ from .define import (EnumInsertionOrder,
                      EnumDockMgrConfigFlag,
                      EnumAutoHideFlag,
                      EnumSideBarLocation,
-                     EnuStateFileVersion,
+                     EnumStateFileVersion,
                      DOCK_MANAGER_DEFAULT_CONFIG,
                      AUTO_HIDE_DEFAULT_CONFIG)
 
-from .dock_container_widget import CDockContainerWidget,DockContainerWidgetMgr
+from .dock_container_widget import CDockContainerWidget, DockContainerWidgetMgr
 from .dock_overlay import CDockOverlay
 from .dock_state_reader import CDockStateReader
 from .floating_dock_container import CFloatingDockContainer
 from .dock_focus_controller import CDockFocusController
-from .util import LINUX, findParent, testFlag
+from .util import LINUX, findParent, testFlag, setFlag
 from .dock_area_widget import CDockAreaWidget
 
 try:
@@ -31,10 +31,9 @@ try:
 except ImportError:
     qCompress = None
     qUncompress = None
+from .dock_widget import CDockWidget
 
 if TYPE_CHECKING:
-
-    from .dock_widget import CDockWidget
     from .dock_splitter import CDockSplitter
 
 logger = logging.getLogger(__name__)
@@ -57,7 +56,7 @@ class DockManagerMgr:
     focusController: 'CDockFocusController'
     centralWidget: 'CDockWidget'
 
-    def __init__(self, _this):
+    def __init__(self, _this,inherit_style=True):
         '''
         Private data constructor
 
@@ -67,8 +66,9 @@ class DockManagerMgr:
         '''
 
         self._this = _this
+        self.inheritStyle=inherit_style
         self.floatingWidgets = []
-        self.hiddenFloatingWidgets=[]
+        self.hiddenFloatingWidgets = []
         self.containers = []
         self.uninitializedFloatingWidgets = []
         self.containerOverlay = None
@@ -117,53 +117,62 @@ class DockManagerMgr:
         -------
         value : bool
         '''
-        if state.isEmpty():
-            return False
-
-        _stream = CDockStateReader(state)
-        _stream.readNextStartElement()
-        if _stream.name() != "QtAdvancedDockingSystem":
-            return False
-
-        _v = _stream.attributes().value("Version")
-        if int(_v) != version:
-            return False
-        _stream.setFileVersion(_v)
-        if not _stream.attributes().value("UserVersion").isEmpty():
-            _v = _stream.attributes().value("UserVersion")
-            if int(_v) != version:
-                return False
-        _result = True
-        _dock_containers = int(_stream.attributes().value("Containers"))
-        logger.debug('dock_containers %s', _dock_containers)
-        if self.centralWidget is not None:
-            _central_w_attr = _stream.attributes().value("CentralWidget")
-            # If we have a central widget but a state without central widget, then
-            # something is wrong.
-            if _central_w_attr.isEmpty():
-                logger.warning('Dock manager has central widget but saved state does not have central widget.')
-                return False
-            if _central_w_attr.toString() != self.centralWidget.objectName():
-                logger.warning('Object name of central widget does not match name of central widget in saved state.')
+        try:
+            if state.isEmpty():
                 return False
 
-        _dock_container_count = 0
-        while _stream.readNextStartElement():
-            if _stream.name() == "Container":
-                _result = self.restoreContainer(_dock_container_count, _stream,
-                                                testing=testing)
-                if not _result:
-                    break
-                _dock_container_count += 1
+            _stream = CDockStateReader(state)
+            _stream.readNextStartElement()
+            if _stream.name() != "QtAdvancedDockingSystem":
+                return False
 
-        if not testing:
-            _f_w_idx = _dock_container_count - 1
-            for i in range(_f_w_idx, len(self.floatingWidgets)):
-                _fw = self.floatingWidgets[i]
-                self._this.removeDockContainer(_fw.dockContainer())
-                _fw.deleteLater()
+            _v = _stream.attributes().value("Version")
+            if not _v or int(_v) > EnumStateFileVersion.CurrentVersion:
+                return False
+            _stream.setFileVersion(_v)
+            _uv = _stream.attributes().value("UserVersion")
+            if _uv:
+                if int(_uv) != version:
+                    return False
+            _result = True
+            _dock_containers = int(_stream.attributes().value("Containers"))
+            logger.debug('dock_containers %s', _dock_containers)
+            if self.centralWidget is not None:
+                _central_w_attr = _stream.attributes().value("CentralWidget")
+                # If we have a central widget but a state without central widget, then
+                # something is wrong.
+                if not _central_w_attr:
+                    logger.warning('Dock manager has central widget but saved state does not have central widget.')
+                    return False
+                if _central_w_attr != self.centralWidget.objectName():
+                    logger.warning('Object name of central widget does not match name of central widget in saved state.')
+                    return False
 
-        return _result
+            _dock_container_count = 0
+            while _stream.readNextStartElement():
+                if _stream.name() == "Container":
+                    _result = self.restoreContainer(_dock_container_count, _stream,
+                                                    testing=testing)
+                    if not _result:
+                        break
+                    _dock_container_count += 1
+
+            if not testing:
+                _f_w_idx = _dock_container_count - 1
+                for i in range(_f_w_idx, len(self.floatingWidgets)):
+                    _fw = self.floatingWidgets[i]
+                    self._this.removeDockContainer(_fw.dockContainer())
+                    _fw.deleteLater()
+                logger.debug('dockManager restoreStateFromXml finish with: %s' % _result)
+            else:
+                logger.debug('dockManager restoreStateFromXml finish test with: %s' % _result)
+            return _result
+        except Exception as e:
+            if logger.level == logging.DEBUG:
+                import traceback
+                print(traceback.format_exc())
+            logger.error('restoreStateFromXml failed:%s' % e)
+            return False
 
     def restoreState(self, state: QtCore.QByteArray, version: int) -> bool:
         '''
@@ -178,15 +187,15 @@ class DockManagerMgr:
         -------
         value : bool
         '''
-        _state = state if state.startsWith('<?xml') else QtCore.qUncompress(state)
-        if not self.checkFormat(state, version):
+        _state = state if state.startsWith('<?xml'.encode()) else QtCore.qUncompress(state)
+        if not self.checkFormat(_state, version):
             logger.debug('checkFormat: Error checking format!')
             return False
 
         # Hide updates of floating widgets from use
         self.hideFloatingWidgets()
         self.markDockWidgetsDirty()
-        if not self.restoreStateFromXml(state, version, testing=False):
+        if not self.restoreStateFromXml(_state, version, testing=False):
             logger.debug('restoreState: Error restoring state!')
             return False
 
@@ -210,9 +219,8 @@ class DockManagerMgr:
                 dock_widget.flagAsUnassigned()
                 dock_widget.sigViewToggled.emit(False)
             else:
-                dock_widget.toggleViewInternal(
-                    not dock_widget.property("closed")
-                )
+                # fixme: close, dirty  in define
+                dock_widget.toggleViewInternal(not dock_widget.property("close"))
 
     def restoreDockAreasIndices(self):
         # Now all dock areas are properly restored and we setup the index of
@@ -281,27 +289,37 @@ class DockManagerMgr:
             logger.debug('containers[%d].restore_state()', index)
             _container = self.containers[index]
             if _container.isFloating():
+                # todo: finish this
                 _result = _container.floatingWidget().restoreState(stream, testing)
             else:
-                _result = _container.restoreState(stream, testing)
+                if _container is self._this:
+                    _result = CDockContainerWidget.restoreState(self._this, stream, testing)
+                else:
+                    _result = _container.restoreState(stream, testing)
         return _result
 
     def loadStylesheet(self):
         '''
         Loads the stylesheet
         '''
-        # todo: initial resources
-        _file_name = ":ads/stylesheets/"
-        _file_name += 'focus_highlighting' if testFlag(self._this.configFlags(), EnumDockMgrConfigFlag.FocusHighlighting) else 'default'
-        if LINUX:
-            _file_name += '_linux'
-        _file_name += '.css'
-        _style_file = QtCore.QFile(_file_name)
-        _style_file.open(QtCore.QIODevice.OpenModeFlag.ReadOnly)
-        _stream = QtCore.QTextStream(_style_file)
-        _result = _stream.readAll()
-        _style_file.close()
-        self._this.setStyleSheet(_result)
+        if not self.inheritStyle:
+            from . import ads
+            _file_name = pathlib.Path(__file__).parent.joinpath('stylesheets')
+            if LINUX:
+                _file_name = _file_name.joinpath(
+                    'focus_highlighting_linux.css' if EnumDockMgrConfigFlag.FocusHighlighting in DOCK_MANAGER_DEFAULT_CONFIG else 'default_linux.css')
+            else:
+                _file_name = _file_name.joinpath(
+                    'focus_highlighting.css' if EnumDockMgrConfigFlag.FocusHighlighting in DOCK_MANAGER_DEFAULT_CONFIG else 'default.css')
+            if not pathlib.Path(_file_name).exists():
+                logger.error('can not load stylesheet from file {}'.format(_file_name))
+            logger.debug('use stylesheet %s' % _file_name)
+            _style_file = QtCore.QFile(str(_file_name))
+            _style_file.open(QtCore.QIODevice.OpenModeFlag.ReadOnly)
+            _stream = QtCore.QTextStream(_style_file)
+            _result = _stream.readAll()
+            _style_file.close()
+            self._this.setStyleSheet(_result)
 
     def addActionToMenu(self, action: QtGui.QAction,
                         menu: QtWidgets.QMenu, insert_sorted: bool):
@@ -355,14 +373,15 @@ class CDockManager(CDockContainerWidget):
     # This signal is emitted if the dock manager finished opening a perspective
     sigPerspectiveOpened = QtCore.Signal(str)
     sigFloatingWidgetCreated = QtCore.Signal(CFloatingDockContainer)
-    sigDockWidgetAdded = QtCore.Signal('CDockWidget')
+    # sigDockWidgetAdded = QtCore.Signal(CDockWidget)
+    sigDockWidgetAdded = QtCore.Signal(QtCore.QObject)
     sigDockWidgetAboutToBeRemoved = QtCore.Signal()
-    sigDockWidgetRemoved = QtCore.Signal('CDockWidget')
+    sigDockWidgetRemoved = QtCore.Signal(CDockWidget)
     sigPerspectiveListLoaded = QtCore.Signal()
     sigDockAreaCreated = QtCore.Signal(CDockAreaWidget)
-    sigFocusedDockWidgetChanged = QtCore.Signal('CDockWidget','CDockWidget')
+    sigFocusedDockWidgetChanged = QtCore.Signal(CDockWidget, CDockWidget)
 
-    def __init__(self, parent: QtWidgets.QWidget):
+    def __init__(self, parent: QtWidgets.QWidget,inherit_style=True):
         '''
         The central dock manager that maintains the complete docking system.
         With the configuration flags you can globally control the functionality
@@ -377,7 +396,7 @@ class CDockManager(CDockContainerWidget):
         parent : QWidget
         '''
         super().__init__(self, parent)
-        self._mgrThis = DockManagerMgr(self)
+        self._mgrThis = DockManagerMgr(self,inherit_style=inherit_style)
         self.createRootSplitter()
         self.createSideTabBarWidgets()
         if isinstance(parent, QtWidgets.QMainWindow):
@@ -393,12 +412,16 @@ class CDockManager(CDockContainerWidget):
         # todo: support for linux
 
     def deleteLater(self):
-        _floating_widgets = self._mgr.floatingWidgets
-        for area in self.dockArea():
-            area.dockWidget().deleteLater()
+        _floating_widgets = self._mgrThis.floatingWidgets
+        _areas = list()
+        for i in range(self.dockAreaCount()):
+            _areas.append(self.dockArea(i))
+        for x in _areas:
+            for w in x.dockWidgets():
+                w.deleteLater()
         for floating_widget in _floating_widgets:
             floating_widget.deleteLater()
-        self._mgr.floatingWidgets.clear()
+        self._mgrThis.floatingWidgets.clear()
         super().deleteLater()
 
     def registerFloatingWidget(self, floating_widget: CFloatingDockContainer):
@@ -493,7 +516,8 @@ class CDockManager(CDockContainerWidget):
     def autoHideConfigFlags(self) -> EnumAutoHideFlag:
         return AUTO_HIDE_DEFAULT_CONFIG
 
-    def setConfigFlags(self, flags: EnumDockMgrConfigFlag):
+    @staticmethod
+    def setConfigFlags(flags: EnumDockMgrConfigFlag):
         '''
         Sets the global configuration flags for the whole docking system. Call
         this function before you create your first dock widget.
@@ -502,11 +526,21 @@ class CDockManager(CDockContainerWidget):
         ----------
         flags : DockFlags
         '''
-        # todo: fixthis
         _STATIC_DM_CONFIG_FLAGS = flags
 
-    def setAutoHideConfigFlags(self, flags: EnumAutoHideFlag):
+    @staticmethod
+    def setConfigFlag(flag, on):
+        if isinstance(flag, EnumDockMgrConfigFlag):
+            setFlag(DOCK_MANAGER_DEFAULT_CONFIG, flag, on)
+
+    @staticmethod
+    def setAutoHideConfigFlags(flags: EnumAutoHideFlag):
         _STATIC_AH_FLAGS = flags
+
+    @staticmethod
+    def setAutoHideConfigFlag(flag, on):
+        if isinstance(flag, EnumAutoHideFlag):
+            setFlag(AUTO_HIDE_DEFAULT_CONFIG, flag, on)
 
     def addDockWidget(
             self, area: 'EnumDockWidgetArea',
@@ -533,20 +567,15 @@ class CDockManager(CDockContainerWidget):
         value : DockAreaWidget
         '''
         # self._mgrThis.dockWidgetsMap[dock_widget.objectName()] = dock_widget
-        # if dock_area_widget is None:
-        #     dock_area_widget=self
-        #     _area_of_added_dock_widget=super().addDockWidget(area, dock_widget, dock_area_widget, idx)
-        # else:
-        #     _container = dock_area_widget.dockContainer()
-        #     _area_of_added_dock_widget = _container.addDockWidget(area, dock_widget, dock_area_widget, idx)
-        # self.sigDockWidgetAdded.emit(dock_widget)
-        # return _area_of_added_dock_widget
-        # self._mgrThis.dockWidgetsMap[dock_widget.objectName()] = dock_widget
         # _container = dock_area_widget.dockContainer() if dock_area_widget is not None else self
         # _area_of_added_dock_widget = _container.addDockWidget(area, dock_widget, _container, idx)
         # self.sigDockWidgetAdded.emit(dock_widget)
         # return _area_of_added_dock_widget
-        return super().addDockWidget(area,dock_widget,dock_area_widget,idx)
+        self._mgrThis.dockWidgetsMap[dock_widget.objectName()] = dock_widget
+        _dock_area_widget = super().addDockWidget(area, dock_widget, dock_area_widget, idx)
+        # modified!
+        self.sigDockWidgetAdded.emit(dock_widget)
+        return _dock_area_widget
 
     def addDockWidgetFloating(self, dock_widget: 'CDockWidget'):
         self._mgrThis.dockWidgetsMap.update({dock_widget.objectName(): dock_widget})
@@ -554,7 +583,7 @@ class CDockManager(CDockContainerWidget):
         if _old_dock_area is not None:
             _old_dock_area.removeDockWidget(dock_widget)
         dock_widget.setDockManager(self)
-        _fw = CFloatingDockContainer(dock_widget)
+        _fw = CFloatingDockContainer(dock_widget=dock_widget)
         _fw.resize(dock_widget.size())
         if self.isVisible():
             _fw.show()
@@ -607,7 +636,7 @@ class CDockManager(CDockContainerWidget):
         return _container
 
     def addDockWidgetTabToArea(self, dock_widget: 'CDockWidget',
-                               dock_area_widget: 'CDockAreaWidget', idx: int
+                               dock_area_widget: 'CDockAreaWidget', idx: int=-1
                                ) -> 'CDockAreaWidget':
         '''
         This function will add the given Dockwidget to the given DockAreaWidget
@@ -714,26 +743,27 @@ class CDockManager(CDockContainerWidget):
 
         _xml_data = QtCore.QByteArray()
         _stream = QtCore.QXmlStreamWriter(_xml_data)
-        _stream.setAutoFormatting(EnumDockFlags.XML_AUTO_FORMATTING in self.configFlags())
+        _stream.setAutoFormatting(EnumDockMgrConfigFlag.XmlAutoFormattingEnabled in self.configFlags())
         _stream.writeStartDocument()
         _stream.writeStartElement("QtAdvancedDockingSystem")
-        _stream.writeAttribute("Version", str(EnuStateFileVersion.CurrentVersion))
+        _stream.writeAttribute("Version", str(EnumStateFileVersion.CurrentVersion.value))
         _stream.writeAttribute("UserVersion", str(version))
         _stream.writeAttribute("Containers", str(len(self._mgrThis.containers)))
         if self._mgrThis.centralWidget is not None:
             _stream.writeAttribute("CentralWidget", self._mgrThis.centralWidget.objectName())
         for container in self._mgrThis.containers:
-            container.saveState(_stream)
+            if isinstance(container, CDockManager):
+                super().saveState(_stream)
+            else:
+                container.saveState(_stream)
 
         _stream.writeEndElement()
         _stream.writeEndDocument()
 
-        return (QtCore.qCompress(_xml_data, 9)
-                if EnumDockFlags.XML_COMPRESSION in self.configFlags()
-                   and qCompress is not None
-                else _xml_data)
+        return QtCore.qCompress(_xml_data, 9) if EnumDockMgrConfigFlag.XmlCompressionEnabled in self.configFlags() and hasattr(QtCore,
+                                                                                                                               'qCompress') else _xml_data
 
-    def restore_state(self, state: QtCore.QByteArray, version: int = 0) -> bool:
+    def restoreState(self, state: QtCore.QByteArray, version: int = 0) -> bool:
         '''
         Restores the state of this dockmanagers dockwidgets. The version number
         is compared with that stored in state. If they do not match, the
@@ -757,7 +787,7 @@ class CDockManager(CDockContainerWidget):
         self.sigRestoringState.emit()
         _res = self._mgrThis.restoreState(state, version)
         self._mgrThis.restoringState = False
-        if not self.isHidden():
+        if self.isHidden():
             self.show()
         self.sigStateRestored.emit()
         return _res
@@ -809,8 +839,10 @@ class CDockManager(CDockContainerWidget):
         return list(self._mgrThis.perspectives.keys())
 
     def openPerspective(self, perspective_name: str):
+        logger.debug('check to loading perspective: %s', perspective_name)
         if perspective_name not in self._mgrThis.perspectives:
             return
+        logger.debug('loading perspective: %s', perspective_name)
         self.sigOpeningPerspective.emit(perspective_name)
         self.restoreState(self._mgrThis.perspectives.get(perspective_name))
         self.sigPerspectiveOpened.emit(perspective_name)
@@ -870,7 +902,8 @@ class CDockManager(CDockContainerWidget):
             logger.warning('central widget already exist')
             return None
         if self._mgrThis.dockWidgetsMap:
-            logger.warning('no place for the central widget')
+            QtCore.qWarning('no place for the central widget')
+            logger.error('no place for the central widget')
             return None
         widget.setFeature(EnumDockWidgetFeature.CLOSEABLE, False)
         widget.setFeature(EnumDockWidgetFeature.MOVABLE, False)
@@ -927,8 +960,8 @@ class CDockManager(CDockContainerWidget):
 
         if not group:
             self._mgrThis.addActionToMenu(toggle_view_action,
-                                      self._mgrThis.viewMenu,
-                                      _alphabetically_sorted)
+                                          self._mgrThis.viewMenu,
+                                          _alphabetically_sorted)
             return toggle_view_action
 
         try:
@@ -942,7 +975,7 @@ class CDockManager(CDockContainerWidget):
             self._mgrThis.viewMenuGroups[group] = _group_menu
 
         self._mgrThis.addActionToMenu(toggle_view_action, _group_menu,
-                                  _alphabetically_sorted)
+                                      _alphabetically_sorted)
         return _group_menu.menuAction()
 
     def viewMenu(self) -> QtWidgets.QMenu:
@@ -980,6 +1013,7 @@ class CDockManager(CDockContainerWidget):
         value : bool
         '''
         return self._mgrThis.restoringState
+
     @staticmethod
     def startDragDistance():
         return QtWidgets.QApplication.startDragDistance() * 1.5

@@ -52,6 +52,9 @@ class ResizeHandlerMgr:
     def isHorizontal(self):
         return self._this.orientation() == QtCore.Qt.Orientation.Horizontal
 
+    def _onRubberBandDestroyed(self, evt):
+        self.rubberBand = None
+
     def setRubberBand(self, pos: int):
         if self.rubberBand is None:
             self.rubberBand = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Shape.Line, self.target.parentWidget())
@@ -62,6 +65,7 @@ class ResizeHandlerMgr:
         elif self.handlePosition in [QtCore.Qt.Edge.TopEdge, QtCore.Qt.Edge.BottomEdge]:
             _tl.setY(_tl.y() + pos)
         _geo.moveTopLeft(_tl)
+        self.rubberBand.destroyed.connect(self._onRubberBandDestroyed)
         self.rubberBand.setGeometry(_geo)
         self.rubberBand.show()
 
@@ -69,25 +73,26 @@ class ResizeHandlerMgr:
         _pos = self.pick(event.pos()) - self.mouseOffset
         _old_geo = self.target.geometry()
         _new_geo = _old_geo
-        if self.handlePosition == QtCore.Qt.Edge.LeftEdge:
-            _new_geo.adjusted(_pos, 0, 0, 0)
+        _edge = QtCore.Qt.Edge
+        if self.handlePosition == _edge.LeftEdge:
+            _new_geo.adjust(_pos, 0, 0, 0)
             _size = max(self.minSize, min(_new_geo.width(), self.maxSize))
             _pos += _new_geo.width() - _size
             _new_geo.setWidth(_size)
             _new_geo.moveTopRight(_old_geo.topRight())
-        elif self.handlePosition == QtCore.Qt.Edge.RightEdge:
-            _new_geo.adjusted(0, 0, _pos, 0)
+        elif self.handlePosition == _edge.RightEdge:
+            _new_geo.adjust(0, 0, _pos, 0)
             _size = max(self.minSize, min(_new_geo.width(), self.maxSize))
             _pos -= _new_geo.width() - _size
             _new_geo.setWidth(_size)
-        elif self.handlePosition == QtCore.Qt.Edge.TopEdge:
-            _new_geo.adjusted(0, _pos, 0, 0)
+        elif self.handlePosition == _edge.TopEdge:
+            _new_geo.adjust(0, _pos, 0, 0)
             _size = max(self.minSize, min(_new_geo.height(), self.maxSize))
             _pos += _new_geo.height() - _size
             _new_geo.setHeight(_size)
             _new_geo.moveBottomLeft(_old_geo.bottomLeft())
-        elif self.handlePosition == QtCore.Qt.Edge.BottomEdge:
-            _new_geo.adjusted(0, 0, 0, _pos)
+        elif self.handlePosition == _edge.BottomEdge:
+            _new_geo.adjust(0, 0, 0, _pos)
             _size = max(self.minSize, min(_new_geo.height(), self.maxSize))
             _pos -= _new_geo.height() - _size
             _new_geo.setHeight(_size)
@@ -105,14 +110,14 @@ class CResizeHandle(QtWidgets.QFrame):
         self.setHandlePosition(h_pos)
 
     def setHandlePosition(self, hp: QtCore.Qt.Edge):
-        self._mgr.handlePosition=hp
-        if hp in [QtCore.Qt.Edge.LeftEdge,QtCore.Qt.Edge.RightEdge]:
+        self._mgr.handlePosition = hp
+        if hp in [QtCore.Qt.Edge.LeftEdge, QtCore.Qt.Edge.RightEdge]:
             self.setCursor(QtCore.Qt.CursorShape.SizeHorCursor)
-        elif hp in [QtCore.Qt.Edge.TopEdge,QtCore.Qt.Edge.BottomEdge]:
+        elif hp in [QtCore.Qt.Edge.TopEdge, QtCore.Qt.Edge.BottomEdge]:
             self.setCursor(QtCore.Qt.CursorShape.SizeVerCursor)
-        self.setMaxResizeSize(self.parentWidget().height() if self._mgr.isHorizontal()  else self.parentWidget().width() )
+        self.setMaxResizeSize(self.parentWidget().height() if self._mgr.isHorizontal() else self.parentWidget().width())
         if not self._mgr.isHorizontal():
-            self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,QtWidgets.QSizePolicy.Policy.Fixed)
+            self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         else:
             self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Expanding)
 
@@ -127,30 +132,30 @@ class CResizeHandle(QtWidgets.QFrame):
         return QtCore.Qt.Orientation.Vertical
 
     def sizeHint(self) -> QtCore.QSize:
-        _res=QtCore.QSize()
+        _res = QtCore.QSize()
         if self._mgr.handlePosition in [QtCore.Qt.Edge.LeftEdge, QtCore.Qt.Edge.RightEdge]:
-            _res=QtCore.QSize(self._mgr.handleWidth,self._mgr.target.height())
+            _res = QtCore.QSize(self._mgr.handleWidth, self._mgr.target.height())
         elif self._mgr.handlePosition in [QtCore.Qt.Edge.TopEdge, QtCore.Qt.Edge.BottomEdge]:
-            _res=QtCore.QSize(self._mgr.target.width(),self._mgr.handleWidth)
+            _res = QtCore.QSize(self._mgr.target.width(), self._mgr.handleWidth)
         return _res
 
     def isResizing(self):
         return self._mgr.pressed
 
     def setMinResizeSize(self, size: int):
-        self._mgr.minSize=size
+        self._mgr.minSize = size
 
     def setMaxResizeSize(self, size: int):
-        self._mgr.maxSize=size
+        self._mgr.maxSize = size
 
     def setOpaqueResize(self, opaque: bool = True):
-        self._mgr.opaqueResize=opaque
+        self._mgr.opaqueResize = opaque
 
     def opaqueResize(self):
         return self._mgr.opaqueResize
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        if not (event.buttons() & QtCore.Qt.MouseButton.LeftButton):
+        if QtCore.Qt.MouseButton.LeftButton not in event.buttons():
             return
         self._mgr.doResizing(event)
 

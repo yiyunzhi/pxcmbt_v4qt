@@ -224,7 +224,7 @@ class CDockAreaTabBar(QtWidgets.QScrollArea):
         '''
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
-            self._mgr.drag_start_mouse_pos = ev.pos()
+            self._mgr.dragStartMousePos = ev.pos()
             return
 
         super().mousePressEvent(ev)
@@ -243,7 +243,7 @@ class CDockAreaTabBar(QtWidgets.QScrollArea):
         logger.debug('DockAreaTabBar.mouseReleaseEvent')
         ev.accept()
         self._mgr.floating_widget = None
-        self._mgr.drag_start_mouse_pos = QtCore.QPoint()
+        self._mgr.dragStartMousePos = QtCore.QPoint()
 
     def minimumSizeHint(self):
         _size = self.sizeHint()

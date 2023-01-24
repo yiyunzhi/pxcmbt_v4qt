@@ -39,7 +39,7 @@ class CTabsWidget(QtWidgets.QWidget):
         self.eventHandler = event_handler
 
     def minimumSizeHint(self) -> QtCore.QSize:
-        return super().minimumSizeHint()
+        return super().sizeHint()
 
     def event(self, event: QtCore.QEvent) -> bool:
         self.eventHandler.handleViewportEvent(event)
@@ -117,13 +117,13 @@ class CAutoHideSideBar(QtWidgets.QScrollArea):
             self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Expanding)
         self.hide()
 
-    def destroy(self, destroyWindow: bool = ..., destroySubWindows: bool = ...) -> None:
-        logger.debug('CAutoHideSideBar destroy')
-        _tabs = findChildren(self, CAutoHideTab, options=QtCore.Qt.FindChildOption.FindDirectChildrenOnly)
-        for x in _tabs:
-            x.setParent(None)
-        self._mgr = None
-        super().destroy(destroyWindow, destroySubWindows)
+    # def destroy(self, destroyWindow: bool = ..., destroySubWindows: bool = ...) -> None:
+    #     logger.debug('CAutoHideSideBar destroy')
+    #     _tabs = findChildren(self, CAutoHideTab, options=QtCore.Qt.FindChildOption.FindDirectChildrenOnly)
+    #     for x in _tabs:
+    #         x.setParent(None)
+    #     self._mgr = None
+    #     super().destroy(destroyWindow, destroySubWindows)
 
     def insertTab(self, index: int, side_tab: CAutoHideTab):
         side_tab.setSideBar(self)
@@ -178,7 +178,8 @@ class CAutoHideSideBar(QtWidgets.QScrollArea):
         return self._mgr.orientation
 
     def tabAt(self, index):
-        return self._mgr.tabsLayout.itemAt(index).widget()
+        _w = self._mgr.tabsLayout.itemAt(index).widget()
+        return _w if isinstance(_w, CAutoHideTab) else None
 
     def tabCount(self):
         return self._mgr.tabsLayout.count() - 1
@@ -190,13 +191,13 @@ class CAutoHideSideBar(QtWidgets.QScrollArea):
         if not self.tabCount():
             return
         s.writeStartElement('SideBar')
-        s.writeAttribute('Area', str(self.sideBarLocation()))
+        s.writeAttribute('Area', str(self.sideBarLocation().value))
         s.writeAttribute('Tabs', str(self.tabCount()))
         for i in range(self.tabCount()):
             _tab = self.tabAt(i)
             if _tab is None:
                 continue
-            _tab.docWidget().autoHideDockContainer().saveState(s)
+            _tab.dockWidget().autoHideDockContainer().saveState(s)
         s.writeEndElement()
 
     def minimumSizeHint(self) -> QtCore.QSize:
@@ -215,3 +216,5 @@ class CAutoHideSideBar(QtWidgets.QScrollArea):
 
     def dockContainer(self):
         return self._mgr.containerWidget
+
+    eSideBarLocation = QtCore.Property(int, lambda x: x.sideBarLocation().value)

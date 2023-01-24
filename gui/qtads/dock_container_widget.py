@@ -3,7 +3,7 @@ import typing
 from typing import TYPE_CHECKING, List, Dict, Tuple, Optional
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .util import (findParent, hideEmptyParentSplitters, qApp, globalGeometry,
+from .util import (findParent, hideEmptyParentSplitters, getQApp, globalGeometry,
                    emitTopLevelEventForWidget, findChild, findChildren)
 from .define import (EnumDockWidgetArea, EnumDropMode, EnumDockWidgetFeature, EnumTitleBarButton,
                      EnumDockMgrConfigFlag, DOCK_MANAGER_DEFAULT_CONFIG, AUTO_HIDE_DEFAULT_CONFIG, EnumAutoHideFlag,
@@ -125,6 +125,8 @@ class DockContainerWidgetMgr:
         self.dockManager = None
         self.zOrderIndex = 0
         self.dockAreas = []
+        self.autoHideWidgets = []
+        self.sideTabBarWidgets = dict()
         self.layout = None
         self.rootSplitter = None
         self.isFloating = False
@@ -140,9 +142,9 @@ class DockContainerWidgetMgr:
 
     def onTimeOut(self):
         _gp = self.delayedAutoHideTab.mapToGlobal(QtCore.QPoint(0, 0))
-        qApp.sendEvent(self.delayedAutoHideTab, QtGui.QMoveEvent(QtCore.QEvent.Type.MouseButtonPress,
-                                                                 QtCore.QPoint(0, 0), _gp, QtCore.Qt.MouseButton.LeftButton,
-                                                                 [QtCore.Qt.MouseButton.LeftButton], QtGui.Qt.KeyboardModifier.NoModifier))
+        getQApp().sendEvent(self.delayedAutoHideTab, QtGui.QMoveEvent(QtCore.QEvent.Type.MouseButtonPress,
+                                                                      QtCore.QPoint(0, 0), _gp, QtCore.Qt.MouseButton.LeftButton,
+                                                                      [QtCore.Qt.MouseButton.LeftButton], QtGui.Qt.KeyboardModifier.NoModifier))
 
     def getDropMode(self, target_pos: QtCore.QPoint):
         _dock_area = self._this.dockAreaAt(target_pos)
@@ -257,8 +259,8 @@ class DockContainerWidgetMgr:
             if _splitter.isHidden():
                 _splitter.show()
         else:
-            _new_splitter = self.newSplitter(_insert_param.orientation())
-            if _insert_param.append():
+            _new_splitter = self.newSplitter(_insert_param.orientation)
+            if _insert_param.append:
                 self.layout.replaceWidget(_splitter, _new_splitter)
                 _new_splitter.addWidget(_splitter)
                 _new_splitter.addWidget(new_dock_area)
@@ -287,13 +289,12 @@ class DockContainerWidgetMgr:
         _insert_param = dockAreaInsertParameters(area)
         _floating_dock_container = floating_widget.dockContainer()
 
-        _new_dock_areas = findChildren(
-            _floating_dock_container, CDockAreaWidget, '', QtCore.Qt.FindChildOption.FindChildrenRecursively)
+        _new_dock_areas = _floating_dock_container.findChildren(CDockAreaWidget, '', QtCore.Qt.FindChildOption.FindChildrenRecursively)
         _splitter = self.rootSplitter
         if len(self.dockAreas) <= 1:
-            _splitter.setOrientation(_insert_param.orientation())
-        elif _splitter.orientation() != _insert_param.orientation():
-            _new_splitter = self.newSplitter(_insert_param.orientation())
+            _splitter.setOrientation(_insert_param.orientation)
+        elif _splitter.orientation() != _insert_param.orientation:
+            _new_splitter = self.newSplitter(_insert_param.orientation)
             _layout_item = self.layout.replaceWidget(_splitter, _new_splitter)
             _new_splitter.addWidget(_splitter)
             self.updateSplitterHandles(_new_splitter)
@@ -302,15 +303,16 @@ class DockContainerWidgetMgr:
         # now we can insert the floating widget content into this container
         _f_splitter = _floating_dock_container.rootSplitter()
         if _f_splitter.count() == 1:
-            insertWidgetIntoSplitter(_splitter, _f_splitter.widget(0), _insert_param.append())
+            insertWidgetIntoSplitter(_splitter, _f_splitter.widget(0), _insert_param.append)
             self.updateSplitterHandles(_splitter)
-        elif _f_splitter.orientation() == _insert_param.orientation():
-            _insert_idx = _splitter.count() if _insert_param.append() else 0
+        elif _f_splitter.orientation() == _insert_param.orientation:
+            _insert_idx = _splitter.count() if _insert_param.append else 0
             while _splitter.count():
+                _insert_idx += 1
                 _splitter.insertWidget(_insert_idx, _f_splitter.widget(0))
                 self.updateSplitterHandles(_splitter)
         else:
-            insertWidgetIntoSplitter(_splitter, _f_splitter, _insert_param.append())
+            insertWidgetIntoSplitter(_splitter, _f_splitter, _insert_param.append)
 
         self.rootSplitter = _splitter
         self.addDockAreasToList(_new_dock_areas)
@@ -343,9 +345,7 @@ class DockContainerWidgetMgr:
         _insert_param = dockAreaInsertParameters(area)
 
         # noinspection PyArgumentList
-        _new_dock_areas = findChildren(
-            _floating_container, CDockAreaWidget, '', QtCore.Qt.FindChildOption.FindChildrenRecursively)
-
+        _new_dock_areas = findChildren(_floating_container, CDockAreaWidget, '', QtCore.Qt.FindChildOption.FindChildrenRecursively)
         _target_area_splitter = findParent(QtWidgets.QSplitter, target_area)
 
         if not _target_area_splitter:
@@ -356,12 +356,8 @@ class DockContainerWidgetMgr:
             _target_area_splitter = _splitter
 
         _area_index = _target_area_splitter.indexOf(target_area)
-
-        _floating_splitter = findChild(
-            floating_widget.dock_container(), QtWidgets.QWidget, '',
-            QtCore.Qt.FindChildOption.FindDirectChildrenOnly)
-
-        if _target_area_splitter.orientation() == _insert_param.orientation():
+        _floating_splitter = _floating_container.rootSplitter()
+        if _target_area_splitter.orientation() == _insert_param.orientation:
             _sizes = _target_area_splitter.sizes()
             _target_area_size = (target_area.width()
                                  if _insert_param.orientation == QtCore.Qt.Orientation.Horizontal
@@ -370,16 +366,14 @@ class DockContainerWidgetMgr:
             _adjust_splitter_sizes = True
             if (_floating_splitter.orientation() != _insert_param.orientation
                     and _floating_splitter.count() > 1):
-                _target_area_splitter.insertWidget(
-                    _area_index + _insert_param.insert_offset,
-                    _floating_splitter)
+                _target_area_splitter.insertWidget(_area_index + _insert_param.insert_offset,_floating_splitter)
                 self.updateSplitterHandles(_target_area_splitter)
             else:
                 _adjust_splitter_sizes = (_floating_splitter.count() == 1)
-                _insert_index = _area_index + _insert_param.insertOffset()
+                _insert_index = _area_index + _insert_param.insert_offset
                 while _floating_splitter.count():
-                    _target_area_splitter.insertWidget(_insert_index,
-                                                       _floating_splitter.widget(0))
+                    _insert_index+=1
+                    _target_area_splitter.insertWidget(_insert_index,_floating_splitter.widget(0))
                     self.updateSplitterHandles(_target_area_splitter)
 
             if _adjust_splitter_sizes:
@@ -389,7 +383,7 @@ class DockContainerWidgetMgr:
                 _target_area_splitter.setSizes(_sizes)
 
         else:
-            _new_splitter = self.newSplitter(_insert_param.orientation())
+            _new_splitter = self.newSplitter(_insert_param.orientation)
             _target_area_size = (target_area.width()
                                  if _insert_param.orientation == QtCore.Qt.Orientation.Horizontal
                                  else target_area.height()
@@ -418,9 +412,10 @@ class DockContainerWidgetMgr:
 
         logger.debug('Deleting floating_widget %s', floating_widget)
         self.addDockAreasToList(_new_dock_areas)
-        self._this.dump_layout()
+        self._this.dumpLayout()
 
     def moveToContainer(self, widget: QtWidgets.QWidget, area: EnumDockWidgetArea):
+        from . import CDockWidget
         if isinstance(widget, CDockWidget):
             _new_dock_area = CDockAreaWidget(self.dockManager, self._this)
             _old_dock_area = widget.dockAreaWidget()
@@ -436,10 +431,10 @@ class DockContainerWidgetMgr:
             """
             _splitter = findParent(CDockSplitter, widget)
             _insert_param = dockAreaInsertParameters(area)
-            if _splitter is self.rootSplitter and _insert_param.orientation() == _splitter.orientation():
-                if _insert_param.append() and _splitter.lastWidget() is widget:
+            if _splitter is self.rootSplitter and _insert_param.orientation == _splitter.orientation():
+                if _insert_param.append and _splitter.lastWidget() is widget:
                     return
-                elif not _insert_param.append() and _splitter.firstWidget() is widget:
+                elif not _insert_param.append and _splitter.firstWidget() is widget:
                     return
             widget.dockContainer().removeDockArea(widget)
             _new_dock_area = widget
@@ -447,6 +442,7 @@ class DockContainerWidgetMgr:
         self.lastAddedAreaCache[areaIdToIndex(area)] = _new_dock_area
 
     def moveIntoCenterOfSection(self, widget: QtWidgets.QWidget, target_area: CDockAreaWidget):
+        from . import CDockWidget
         if isinstance(widget, CDockWidget):
             _old_da = widget.dockAreaWidget()
             if _old_da is None:
@@ -473,7 +469,7 @@ class DockContainerWidgetMgr:
         if EnumDockWidgetArea.CENTER == area:
             self.moveIntoCenterOfSection(widget, target_area)
             return
-
+        from . import CDockWidget
         if isinstance(widget, CDockWidget):
             _new_dock_area = CDockAreaWidget(self.dockManager, self._this)
             _old_dock_area = widget.dockAreaWidget()
@@ -487,18 +483,18 @@ class DockContainerWidgetMgr:
         _target_area_splitter = findParent(QtWidgets.QSplitter, target_area)
         _area_idx = _target_area_splitter.indexOf(target_area)
         _sizes = _target_area_splitter.sizes()
-        if _target_area_splitter.orientation() == _insert_param.orientation():
-            _target_area_size = target_area.width() if _insert_param.orientation() == QtCore.Qt.Orientation.Horizontal else target_area.height()
-            _target_area_splitter.insertWidget(_area_idx + _insert_param.insert_offset(), _new_dock_area)
+        if _target_area_splitter.orientation() == _insert_param.orientation:
+            _target_area_size = target_area.width() if _insert_param.orientation == QtCore.Qt.Orientation.Horizontal else target_area.height()
+            _target_area_splitter.insertWidget(_area_idx + _insert_param.insert_offset, _new_dock_area)
             self.updateSplitterHandles(_target_area_splitter)
             _size = (_target_area_size - _target_area_splitter.handleWidth()) / 2
             _sizes[_area_idx] = _size
             _sizes.insert(_area_idx, _size)
         else:
-            _target_area_size = target_area.width() if _insert_param.orientation() == QtCore.Qt.Orientation.Horizontal else target_area.height()
-            _new_splitter = self.newSplitter(_insert_param.orientation())
+            _target_area_size = target_area.width() if _insert_param.orientation == QtCore.Qt.Orientation.Horizontal else target_area.height()
+            _new_splitter = self.newSplitter(_insert_param.orientation)
             _new_splitter.addWidget(target_area)
-            insertWidgetIntoSplitter(_new_splitter, _new_dock_area, _insert_param.append())
+            insertWidgetIntoSplitter(_new_splitter, _new_dock_area, _insert_param.append)
             self.updateSplitterHandles(_new_splitter)
             _size = _target_area_size / 2
             _new_splitter.setSizes([_size, _size])
@@ -578,7 +574,7 @@ class DockContainerWidgetMgr:
         self.lastAddedAreaCache[areaIdToIndex(int(area))] = _new_dock_area
         return _new_dock_area
 
-    def addDockWidgetToDockArea(self, area: EnumDockWidgetArea, dock_widget: 'CDockWidget', target_area: 'CDockAreaWidget', idx: int=-1):
+    def addDockWidgetToDockArea(self, area: EnumDockWidgetArea, dock_widget: 'CDockWidget', target_area: 'CDockAreaWidget', idx: int = -1):
         if EnumDockWidgetArea.CENTER == area:
             target_area.insertDockWidget(idx, dock_widget)
             target_area.updateTitleBarVisibility()
@@ -589,7 +585,7 @@ class DockContainerWidgetMgr:
         _target_area_splitter = findParent(QtWidgets.QSplitter, target_area)
         _idx = _target_area_splitter.indexOf(target_area)
         _is_equal_split_cfg = EnumDockMgrConfigFlag.EqualSplitOnInsertion in DOCK_MANAGER_DEFAULT_CONFIG
-        if _target_area_splitter.orientation() == _insert_param.orientation():
+        if _target_area_splitter.orientation == _insert_param.orientation:
             logger.debug('TargetAreaSplitter->orientation() == InsertParam.orientation()')
             _target_area_splitter.insertWidget(idx + _insert_param.insert_offset(), _new_dock_area)
             self.updateSplitterHandles(_target_area_splitter)
@@ -598,9 +594,9 @@ class DockContainerWidgetMgr:
         else:
             logger.debug('TargetAreaSplitter->orientation() !== InsertParam.orientation()')
             _target_area_sizes = _target_area_splitter.sizes()
-            _new_splitter = self.newSplitter(_insert_param.orientation())
+            _new_splitter = self.newSplitter(_insert_param.orientation)
             _new_splitter.addWidget(target_area)
-            insertWidgetIntoSplitter(_new_splitter, _new_dock_area, _insert_param.append())
+            insertWidgetIntoSplitter(_new_splitter, _new_dock_area, _insert_param.append)
             self.updateSplitterHandles(_new_splitter)
             _target_area_splitter.insertWidget(idx, _new_splitter)
             self.updateSplitterHandles(_target_area_splitter)
@@ -635,8 +631,8 @@ class DockContainerWidgetMgr:
         if isinstance(widget, QtWidgets.QSplitter):
             _splitter = widget
             stream.writeStartElement("Splitter")
-            _orientation = ('-' if _splitter.orientation() == QtCore.Qt.Orientation.Horizontal
-                            else "|")
+            _orientation = ('|' if _splitter.orientation() == QtCore.Qt.Orientation.Horizontal
+                            else '-')
             stream.writeAttribute("Orientation", _orientation)
             stream.writeAttribute("Count", str(_splitter.count()))
             logger.debug('NodeSplitter orient: %s WidgetCount: %s',
@@ -646,8 +642,8 @@ class DockContainerWidgetMgr:
                 self.saveChildNodesState(stream, _splitter.widget(i))
 
             stream.writeStartElement("Sizes")
-            for Size in _splitter.sizes():
-                stream.writeCharacters(str(Size) + " ")
+            for size in _splitter.sizes():
+                stream.writeCharacters(str(size) + " ")
 
             stream.writeEndElement()
             stream.writeEndElement()
@@ -680,34 +676,43 @@ class DockContainerWidgetMgr:
         while stream.readNextStartElement():
             if stream.name() == "Splitter":
                 _result, _widget = self.restoreSplitter(stream, testing)
+                logger.debug('restore splitter %s %s; testing: %s', _result, _widget, testing)
             elif stream.name() == "Area":
                 _result, _widget = self.restoreDockArea(stream, testing)
+                logger.debug('restore Area %s %s; testing: %s', _result, _widget, testing)
             elif stream.name() == "SideBar":
-                _result, _widget = self.restoreSideBar(stream, testing)
+                _result = self.restoreSideBar(stream, testing)
+                logger.debug('SideBar %s %s; testing: %s', _result, _widget, testing)
             else:
                 stream.skipCurrentElement()
             logger.debug('restored child node %s: %s', stream.name(), _widget)
 
         return _result, _widget
 
-    def restoreSideBar(self, stream: CDockStateReader, create_widget: typing.List[QtWidgets.QWidget], testing):
+    def restoreSideBar(self, stream: CDockStateReader, testing):
         if EnumAutoHideFlag.AutoHideFeatureEnabled not in AUTO_HIDE_DEFAULT_CONFIG:
             return True
         _area = stream.attributes().value('Area')
         if not _area:
             return False
+        else:
+            _area = EnumSideBarLocation(int(_area))
         while stream.readNextStartElement():
             if stream.name() != 'Widget':
                 continue
             _name = stream.attributes().value('Name')
-            if _name.isEmpty():
+            if not _name:
                 return False
             _close = stream.attributes().value('Closed')
             if not _close:
                 return False
-            _size = stream.attributes().value('Closed')
+            else:
+                _close = int(_close)
+            _size = stream.attributes().value('Size')
             if not _size:
                 return False
+            else:
+                _size = int(_size)
             stream.skipCurrentElement()
             _dw = self.dockManager.findDockWidget(_name)
             if _dw is None or testing:
@@ -715,7 +720,7 @@ class DockContainerWidgetMgr:
             _sb = self._this.sideTabBar(_area)
             if _dw.isAutoHide():
                 _ac = _dw.autoHideDockContainer()
-                if _ac.sideBar() != _sb:
+                if _ac.sideBar() is not _sb:
                     _sb.addAutoHideWidget(_ac)
             else:
                 _ac = _sb.insertDockWidget(-1, _dw)
@@ -741,9 +746,9 @@ class DockContainerWidgetMgr:
         widget : QWidget
         '''
         _orientation_str = stream.attributes().value("Orientation")
-        if _orientation_str.startswith("-"):
+        if _orientation_str.startswith("|"):
             _orientation = QtCore.Qt.Orientation.Horizontal
-        elif _orientation_str.startswith("|"):
+        elif _orientation_str.startswith("-"):
             _orientation = QtCore.Qt.Orientation.Vertical
         else:
             return False, None
@@ -751,9 +756,11 @@ class DockContainerWidgetMgr:
         if stream.fileVersion() == 0:
             _is_h_splitter = not _is_h_splitter
 
-        _widget_count = int(stream.attributes().value("Count"))
+        _widget_count = stream.attributes().value("Count")
         if not _widget_count:
             return False, None
+        else:
+            _widget_count = int(_widget_count)
 
         logger.debug('Restore NodeSplitter Orientation: %s  WidgetCount: %s',
                      _orientation, _widget_count)
@@ -764,6 +771,7 @@ class DockContainerWidgetMgr:
 
         while stream.readNextStartElement():
             _child_node = None
+            _result = True
             if stream.name() == "Splitter":
                 _result, _child_node = self.restoreSplitter(stream, testing)
                 if not _result:
@@ -775,16 +783,18 @@ class DockContainerWidgetMgr:
             elif stream.name() == "Sizes":
                 _s_sizes = stream.readElementText().strip()
                 _sizes = [int(sz) for sz in _s_sizes.split(' ')]
-                logger.debug('Sizes: %s (from s_sizes: %s)', _sizes, _s_sizes)
+                logger.debug('restoreSplitter Sizes: %s (from s_sizes: %s)', _sizes, _s_sizes)
             else:
                 stream.skipCurrentElement()
-
-            if _splitter is not None and _child_node is not None:
-                logger.debug('ChildNode isVisible %s isVisibleTo %s',
-                             _child_node.isVisible(),
-                             _child_node.isVisibleTo(_splitter))
-                _splitter.addWidget(_child_node)
-                _visible |= _child_node.isVisibleTo(_splitter)
+            if not _result:
+                return False, None
+            if testing or _child_node is None:
+                continue
+            logger.debug('restoreSplitter ChildNode isVisible %s isVisibleTo %s',
+                         _child_node.isVisible(),
+                         _child_node.isVisibleTo(_splitter))
+            _splitter.addWidget(_child_node)
+            _visible |= _child_node.isVisibleTo(_splitter)
         if not testing:
             self.updateSplitterHandles(_splitter)
         if len(_sizes) != _widget_count:
@@ -802,14 +812,13 @@ class DockContainerWidgetMgr:
 
         return True, _splitter
 
-    def restoreDockArea(self, stream: CDockStateReader, CreatedWidget, testing: bool) -> Tuple[bool, QtWidgets.QWidget]:
+    def restoreDockArea(self, stream: CDockStateReader, testing: bool) -> Tuple[bool, QtWidgets.QWidget]:
         '''
         Restores a dock area.
 
         Parameters
         ----------
         stream : QXmlStreamReader
-        created_widget : QWidget
         testing : bool
 
         Returns
@@ -817,14 +826,13 @@ class DockContainerWidgetMgr:
         value : bool
         widget : QWidget
         '''
-        # todo: fix this function, python can not overwrite the reference of argument
+        # modified: fix this function, python can not overwrite the reference of argument
         #       maybe use a list for dock_area then pop the first.
-        _dock_area = None
-        _result = CDockAreaWidget().restoreState(stream, None, testing, self._this)
-        if _result and _dock_area is not None:
-            self.appendDockAreas(_dock_area)
-        CreatedWidget = _dock_area
-        return _result
+        _da = None
+        _result, _da = CDockAreaWidget.restoreState(stream, testing, self._this)
+        if _result and _da is not None:
+            self.appendDockAreas(_da)
+        return _result, _da
 
     def dumpRecursive(self, level: int, widget: QtWidgets.QWidget):
         '''
@@ -841,8 +849,8 @@ class DockContainerWidgetMgr:
             logger.debug(
                 "%sSplitter %s v: %s c: %s",
                 _indent,
-                ('|' if _splitter.orientation() == QtCore.Qt.Orientation.Vertical else '--'),
-                (' ' if _splitter.isHidden() else 'v'),
+                ('--' if _splitter.orientation() == QtCore.Qt.Orientation.Vertical else '|'),
+                ('h' if _splitter.isHidden() else 'v'),
                 _splitter.count()
             )
 
@@ -853,7 +861,7 @@ class DockContainerWidgetMgr:
             logger.debug('%sDockArea', _indent)
             logger.debug('%s%s %s DockArea',
                          _indent,
-                         ' ' if _dock_area.isHidden() else 'v',
+                         'h' if _dock_area.isHidden() else 'v',
                          ' ' if _dock_area.openDockWidgetsCount() > 0 else 'c',
                          )
 
@@ -861,8 +869,8 @@ class DockContainerWidgetMgr:
             for i, dock_widget in enumerate(_dock_area.dockWidgets()):
                 logger.debug('%s%s%s%s %s', _indent,
                              '*' if i == _dock_area.currentIndex() else ' ',
-                             ' ' if i == dock_widget.isHidden() else 'v',
-                             'c' if i == dock_widget.is_closed() else ' ',
+                             'h' if i == dock_widget.isHidden() else 'v',
+                             'c' if i == dock_widget.isClosed() else ' ',
                              dock_widget.windowTitle()
                              )
 
@@ -961,7 +969,7 @@ class DockContainerWidgetMgr:
 
         self.visibleDockAreaCount_ += 1 if visible else -1
         self.onVisibleDockAreaCountChanged()
-        self._this.sigDockAreaViewToggled(_dock_area, visible)
+        self._this.sigDockAreaViewToggled.emit(_dock_area, visible)
 
 
 class CDockContainerWidget(QtWidgets.QFrame):
@@ -976,6 +984,7 @@ class CDockContainerWidget(QtWidgets.QFrame):
     # This signal is emitted if a dock area is opened or closed via
     # toggleView() function
     sigDockAreaViewToggled = QtCore.Signal(CDockAreaWidget, bool)
+    sigAutoHideWidgetCreated = QtCore.Signal(CAutoHideDockContainer)
     Z_ORDER_COUNTER = 0
 
     def __init__(self, dock_manager: 'CDockManager', parent: QtWidgets.QWidget):
@@ -1039,7 +1048,6 @@ class CDockContainerWidget(QtWidgets.QFrame):
         elif e.type() == QtCore.QEvent.Type.Show and not self._mgr.zOrderIndex:
             self.Z_ORDER_COUNTER += 1
             self._mgr.zOrderIndex = self.Z_ORDER_COUNTER
-
         return _result
 
     def rootSplitter(self) -> QtWidgets.QSplitter:
@@ -1056,14 +1064,13 @@ class CDockContainerWidget(QtWidgets.QFrame):
         '''
         Helper function for creation of the root splitter
         '''
-        if not hasattr(self._mgr, 'rootSplitter') or self._mgr.rootSplitter:
+        if self._mgr.rootSplitter:
             return
 
         self._mgr.rootSplitter = self._mgr.newSplitter(QtCore.Qt.Orientation.Horizontal)
         self._mgr.layout.addWidget(self._mgr.rootSplitter, 1, 1)
 
     def createSideTabBarWidgets(self):
-        if not hasattr(self._mgr, 'sideTabBarWidgets'): return
         if EnumAutoHideFlag.AutoHideFeatureEnabled not in AUTO_HIDE_DEFAULT_CONFIG:
             return
         _area = EnumSideBarLocation.LEFT
@@ -1143,7 +1150,7 @@ class CDockContainerWidget(QtWidgets.QFrame):
                 _dropped = True
         # Remove the auto hide widgets from the FloatingWidget and insert
         # them into this widget
-        for x in floating_widget.dockContainer().autoHideWidget():
+        for x in floating_widget.dockContainer().autoHideWidgets():
             _side_bar = self.sideTabBar(x.sideBarLocation())
             _side_bar.addAutoHideWidget(x)
         if _dropped:
@@ -1233,7 +1240,7 @@ class CDockContainerWidget(QtWidgets.QFrame):
         # avoid too many empty splitters
         if _splitter is self._mgr.rootSplitter:
             logger.debug('Removed from RootSplitter')
-            if not _splitter.count:
+            if not _splitter.count():
                 _splitter.hide()
                 return emit_and_exit()
             _widget = _splitter.widget(0)
@@ -1275,8 +1282,9 @@ class CDockContainerWidget(QtWidgets.QFrame):
         if self.isFloating():
             _floating_widget = self.floatingWidget()
             _geometry = _floating_widget.saveGeometry()
-            stream.writeTextElement("Geometry", _geometry.toHex(' '))
+            stream.writeTextElement("Geometry", bytes(_geometry.toBase64()).decode('utf-8'))
         self._mgr.saveChildNodesState(stream, self._mgr.rootSplitter)
+        self._mgr.saveAutoHideWidgetsState(stream)
         stream.writeEndElement()
 
     def restoreState(self, stream: CDockStateReader, testing: bool = False) -> bool:
@@ -1312,8 +1320,7 @@ class CDockContainerWidget(QtWidgets.QFrame):
 
             _geometry_string = stream.readElementText(
                 CDockStateReader.ReadElementTextBehaviour.ErrorOnUnexpectedElement)
-
-            _geometry = QtCore.QByteArray.fromHex(_geometry_string)
+            _geometry = QtCore.QByteArray.fromBase64(_geometry_string.encode('utf-8'))
             if _geometry.isEmpty():
                 return False
 
@@ -1420,7 +1427,7 @@ class CDockContainerWidget(QtWidgets.QFrame):
         value : DockWidget
         '''
         _top_level_dock_area = self.topLevelDockArea()
-        if not _top_level_dock_area:
+        if _top_level_dock_area is None:
             return None
 
         _dock_widgets = _top_level_dock_area.openedDockWidgets()
@@ -1482,7 +1489,7 @@ class CDockContainerWidget(QtWidgets.QFrame):
         _top_level_dock_widget = self.topLevelDockWidget()
         _old_dock_area = dock_widget.dockAreaWidget()
         if _old_dock_area is not None:
-            _old_dock_area.remove_dock_widget(dock_widget)
+            _old_dock_area.removeDockWidget(dock_widget)
 
         dock_widget.setDockManager(self._mgr.dockManager)
         if dock_area_widget is not None:
@@ -1490,13 +1497,13 @@ class CDockContainerWidget(QtWidgets.QFrame):
         else:
             _dock_area = self._mgr.addDockWidgetToContainer(area, dock_widget)
         if _top_level_dock_widget is not None:
-            _new_tldw = self.topLevelDockWidget()
+            _new_top_level_dock_widget = self.topLevelDockWidget()
             """
             If the container contained only one visible dock widget, the we need
             to emit a top level event for this widget because it is not the one and
 		    only visible docked widget anymore
             """
-            if _new_tldw is None:
+            if _new_top_level_dock_widget is None:
                 emitTopLevelEventForWidget(_top_level_dock_widget, False)
         return _dock_area
 
@@ -1591,10 +1598,13 @@ class CDockContainerWidget(QtWidgets.QFrame):
                 ]
 
     def openedDockWidgets(self):
-        return [dock_area.openedDockWidgets()
-                for dock_area in self._mgr.dockAreas
-                if not dock_area.isHidden()
-                ]
+        _list = list()
+
+        [_list.extend(dock_area.openedDockWidgets())
+         for dock_area in self._mgr.dockAreas
+         if not dock_area.isHidden()
+         ]
+        return _list
 
     def dockAreaCount(self) -> int:
         '''

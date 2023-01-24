@@ -1,8 +1,3 @@
-# TODO: Q_PROPERTY
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
-
 from .define import CDockInsertParam
 from .define import EnumDockWidgetArea
 from .define import EnumDockWidgetFeature
@@ -15,7 +10,9 @@ from .define import EnumOverlayMode
 from .define import EnumWidgetState
 from .define import EnumToggleViewActionMode
 from .define import EnumInsertionOrder
-
+from .define import EnumMinimumSizeHintMode
+from .define import EnumDockMgrConfigFlag
+from .define import EnumDockAreaFlag
 from . import util
 
 from .eliding_label import CElidingLabel
@@ -30,12 +27,12 @@ from .dock_overlay import CDockOverlay, CDockOverlayCross
 from .dock_splitter import CDockSplitter
 from .dock_widget import CDockWidget
 from .dock_widget_tab import CDockWidgetTab
-
+from .floating_drag_preview import CFloatingDragPreview
 # from . import examples
 
 
 __all__ = [
-    '__version__',
+
     'CDockAreaLayout',
     'CDockAreaTabBar',
     'CDockAreaTitleBar',

@@ -36,7 +36,6 @@ class ElidingLabelMgr:
         if self.isElided != _was_elided:
             self._this.sigElidedChanged.emit(self.isElided)
         QtWidgets.QLabel.setText(self._this,_text)
-        #self._this.setText(_text)
 
     def isModeElideNone(self) -> bool:
         '''
@@ -159,11 +158,12 @@ class CElidingLabel(QtWidgets.QLabel):
         -------
         value : QSize
         '''
-        if self.pixmap() is not None or self._mgr.isModeElideNone():
+        _has_pm=not self.pixmap().isNull()
+        if _has_pm or self._mgr.isModeElideNone():
             return super().sizeHint()
-
+        # fixme: low qt version to compatible
         _fm = self.fontMetrics()
-        return QtCore.QSize(_fm.width(self._mgr.text), super().sizeHint().height())
+        return QtCore.QSize(_fm.horizontalAdvance(self._mgr.text), super().sizeHint().height())
 
     def setText(self, text: str):
         '''

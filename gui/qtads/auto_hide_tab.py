@@ -56,7 +56,7 @@ class AutoHideTabMgr:
             self._this.setOrientation(_orientation)
 
     def dockContainer(self):
-        return self.dockWidget if self.dockWidget.dockContainer() else None
+        return self.dockWidget.dockContainer() if self.dockWidget is not None else None
 
     def forwardEventToDockContainer(self, event: QtCore.QEvent):
         _dc = self.dockContainer()
@@ -98,7 +98,7 @@ class CAutoHideTab(CPushButton):
         else:
             self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Minimum)
         _orientation = EnumButtonOrientation.Horizontal if orientation == QtCore.Qt.Orientation.Horizontal else EnumButtonOrientation.VerticalTopToBottom
-        super().setButtonOrientation(_orientation)
+        self.setButtonOrientation(_orientation)
         self.updateStyle()
 
     def orientation(self):
@@ -117,7 +117,8 @@ class CAutoHideTab(CPushButton):
             return
         self._mgr.dockWidget = widget
         self.setText(widget.windowTitle())
-        self.setIcon(self._mgr.dockWidget.icon())
+        if self._mgr.dockWidget.icon():
+            self.setIcon(self._mgr.dockWidget.icon())
         self.setToolTip(widget.windowTitle())
 
     def iconOnly(self):
@@ -127,20 +128,22 @@ class CAutoHideTab(CPushButton):
         return self._mgr.sideBar
 
     def event(self, event: QtCore.QEvent):
-        if EnumAutoHideFlag.AutoHideShowOnMouseOver in AUTO_HIDE_DEFAULT_CONFIG:
+        if EnumAutoHideFlag.AutoHideShowOnMouseOver not in AUTO_HIDE_DEFAULT_CONFIG:
             return super().event(event)
         if event.type() in [QtCore.QEvent.Type.Enter, QtCore.QEvent.Type.Leave]:
             self._mgr.forwardEventToDockContainer(event)
         elif event.type() == QtCore.QEvent.Type.MouseButtonPress:
-            """
-            If AutoHideShowOnMouseOver is active, then the showing is triggered
-		    by a MousePressEvent sent to this tab. To prevent accidental hiding
-		    of the tab by a mouse click, we wait at least 500 ms before we accept
-		    the mouse click
-            """
+            # If AutoHideShowOnMouseOver is active, then the showing is triggered
+            # by a MousePressEvent sent to this tab. To prevent accidental hiding
+            # of the tab by a mouse click, we wait at least 500 ms before we accept
+            # the mouse click
             if not event.spontaneous():
                 self._mgr.timerSinceHoverMousePress.restart()
                 self._mgr.forwardEventToDockContainer(event)
             elif self._mgr.timerSinceHoverMousePress.hasExpired(500):
                 self._mgr.forwardEventToDockContainer(event)
         return super().event(event)
+
+    eSideBarLocation = QtCore.Property(int, lambda x: x.sideBarLocation().value)
+    pIconOnly = QtCore.Property(bool, iconOnly)
+    pActivTab = QtCore.Property(bool, isActiveTab)

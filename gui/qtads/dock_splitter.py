@@ -1,5 +1,4 @@
 from PySide6 import QtCore, QtWidgets
-from .dock_area_widget import CDockAreaWidget
 
 
 class DockSplitterMgr:
@@ -52,6 +51,7 @@ class CDockSplitter(QtWidgets.QSplitter):
         return self.widget(self.count() - 1) if self.count() > 0 else None
 
     def isResizingWithContainer(self):
+        from .dock_area_widget import CDockAreaWidget
         for x in self.findChildren(CDockAreaWidget):
             if x.isCentralWidgetArea():
                 return True

@@ -6,7 +6,7 @@ from .define import (EnumSideBarLocation,
                      EnumDockMgrConfigFlag,
                      EnumRepolishChildOptions)
 from .util import (findParent,
-                   qApp,
+                   getQApp,
                    repolishStyle,
                    evtFloatingWidgetDragStartEvent,
                    evtDockedWidgetDragStartEvent)
@@ -16,7 +16,6 @@ from .dock_components_factory import DEFAULT_COMPONENT_FACTORY
 
 if typing.TYPE_CHECKING:
     from .dock_widget import CDockWidget
-    from .dock_area_widget import CDockAreaWidget
     from .dock_container_widget import CDockContainerWidget
 
 
@@ -76,7 +75,7 @@ class AutoHideDockContainerMgr:
         elif loc == EnumSideBarLocation.BOTTOM:
             return EnumDockWidgetArea.BOTTOM
         else:
-            return EnumDockWidgetArea.NO_AREA
+            return EnumDockWidgetArea.LEFT
 
     def updateResizeHandleSizeLimitMax(self):
         _dc = self._this.dockContainer()
@@ -107,6 +106,7 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
         self._mgr.sideTabBarArea = area
         self._mgr.sideTab = DEFAULT_COMPONENT_FACTORY.createDockWidgetSideTab()
         self._mgr.sideTab.pressed.connect(self.toggleCollapseState)
+        from . import CDockAreaWidget
         self._mgr.dockArea = CDockAreaWidget(dock_widget.dockManager(), parent)
         self._mgr.dockArea.setObjectName("autoHideDockArea")
         self._mgr.dockArea.setAutoHideDockContainer(self)
@@ -117,15 +117,15 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
         self._mgr.layout.setContentsMargins(0, 0, 0, 0)
         self._mgr.layout.setSpacing(0)
         self.setLayout(self._mgr.layout)
-        self.ResizeHandle = CResizeHandle(get_edge_from_side_bar_area(area), self)
-        self.ResizeHandle.setMinResizeSize(64)
+        self._mgr.resizeHandle = CResizeHandle(get_edge_from_side_bar_area(area), self)
+        self._mgr.resizeHandle.setMinResizeSize(64)
 
         _opaqueResize = EnumDockMgrConfigFlag.OpaqueSplitterResize in DOCK_MANAGER_DEFAULT_CONFIG
         self._mgr.resizeHandle.setOpaqueResize(_opaqueResize)
-        self._mgr.Size = self._mgr.dockArea.size()
+        self._mgr.size = self._mgr.dockArea.size()
 
         self.addDockWidget(dock_widget)
-        self.parent.registerAutoHideWidget(self)
+        self.parent().registerAutoHideWidget(self)
 
         # The dock area should not be added to the layout before it contains the
         # dock widget. If you add it to the layout before it contains the dock widget
@@ -134,14 +134,16 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
 
         self._mgr.layout.addWidget(self._mgr.dockArea)
         self._mgr.layout.insertWidget(resize_handle_layout_position(area), self._mgr.resizeHandle)
+        #self.setFrameStyle(QtWidgets.QFrame.Shape.StyledPanel|QtWidgets.QFrame.Shadow.Raised)
 
-    def destroy(self, destroyWindow: bool = ..., destroySubWindows: bool = ...) -> None:
-        logging.debug('~CAutoHideDockContainer')
-        qApp.removeEventFilter(self)
-        if self.dockContainer():
-            self.dockContainer().removeAutoHideWidget(self)
-        if self._mgr.sideTab:
-            self._mgr.sideTab = None
+    # def destroy(self, destroyWindow: bool = ..., destroySubWindows: bool = ...) -> None:
+    #     logging.debug('~CAutoHideDockContainer')
+    #     getQApp().removeEventFilter(self)
+    #     if self.dockContainer():
+    #         self.dockContainer().removeAutoHideWidget(self)
+    #     if self._mgr.sideTab:
+    #         self._mgr.sideTab = None
+    #     super().destroy(destroyWindow,destroySubWindows)
 
     def sideTab(self):
         if self._mgr.sideTab:
@@ -154,6 +156,7 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
                 return None
 
     def dockContainer(self) -> 'CDockContainerWidget':
+        from . import CDockContainerWidget
         return findParent(CDockContainerWidget, self)
 
     def autoHideTab(self):
@@ -189,13 +192,13 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
             self.move(_rect.topLeft())
         elif _sb_loc == EnumSideBarLocation.RIGHT:
             self.resize(min(self._mgr.size.width(), _rect.width() - self._mgr.RESIZE_MARGIN), _rect.height())
-            _p = _rect.topRight().rx()
-            _p -= (self.width() - 1)
+            _p = QtCore.QPoint(_rect.topRight())
+            _p.setX(_p.x() - (self.width() - 1))
             self.move(_p)
-        elif _sb_loc == EnumSideBarLocation.RIGHT:
+        elif _sb_loc == EnumSideBarLocation.BOTTOM:
             self.resize(_rect.width(), min(_rect.height() - self._mgr.RESIZE_MARGIN, self._mgr.size.height()))
-            _p = _rect.bottomLeft().rx()
-            _p -= (self.height() - 1)
+            _p = QtCore.QPoint(_rect.bottomLeft())
+            _p.setY(_p.y() - (self.height() - 1))
             self.move(_p)
 
     def addDockWidget(self, dock_widget: 'CDockWidget'):
@@ -248,8 +251,9 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
     def saveState(self, xml_stream: QtCore.QXmlStreamWriter):
         xml_stream.writeStartElement('Widget')
         xml_stream.writeAttribute('Name', self._mgr.dockWidget.objectName())
-        xml_stream.writeAttribute('Closed', str(self._mgr.dockWidget.isClosed()))
+        xml_stream.writeAttribute('Closed', '1' if self._mgr.dockWidget.isClosed() else '0')
         xml_stream.writeAttribute('Size', str(self._mgr.size.height() if self._mgr.isHorizontal() else self._mgr.size.width()))
+        xml_stream.writeEndElement()
 
     def toggleView(self, enable):
         if enable:
@@ -259,19 +263,19 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
             if self._mgr.sideTab:
                 self._mgr.sideTab.hide()
             self.hide()
-            qApp.removeEventFilter(self)
+            getQApp().removeEventFilter(self)
 
     def collapseView(self, enable):
         if enable:
             self.hide()
-            qApp.removeEventFilter(self)
+            getQApp().removeEventFilter(self)
         else:
             self.updateSize()
             self._mgr.updateResizeHandleSizeLimitMax()
             self.raise_()
             self.show()
             self._mgr.dockWidget.dockManager().setDockWidgetFocused(self._mgr.dockWidget)
-            qApp.installEventFilter(self)
+            getQApp().installEventFilter(self)
         logging.debug('CAutoHideDockContainer::collapseView enable=%s' % enable)
         self._mgr.sideTab.updateStyle()
 
@@ -305,7 +309,7 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
             if not self._mgr.resizeHandle.isResizing():
                 self.updateSize()
         elif event.type() == QtCore.QEvent.Type.MouseButtonPress:
-            if not watched:
+            if not isinstance(watched,QtWidgets.QWidget):
                 return super().eventFilter(watched, event)
 
             # Now check, if the user clicked into the side tab and ignore this event,
@@ -313,7 +317,7 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
             # do not ignore this here, then we will collapse the container and the side tab
             # click handler will uncollapse it
 
-            if watched == self._mgr.sideTab:
+            if watched is self._mgr.sideTab:
                 return super().eventFilter(watched, event)
 
             # Now we check, if the user clicked inside of this auto hide container.
@@ -332,7 +336,7 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
             # If we are dragging our own floating widget, the we do not need to
             # collapse the view
             _float_w = self.dockContainer().floatingWidget()
-            if _float_w != watched:
+            if _float_w is not watched:
                 self.collapseView(True)
         elif event.type() == evtDockedWidgetDragStartEvent:
             self.collapseView(True)
@@ -356,3 +360,5 @@ class CAutoHideDockContainer(QtWidgets.QFrame):
         elif e.type() == QtCore.QEvent.Type.MouseButtonPress:
             return True
         return super().event(e)
+
+    eSideBarLocation = QtCore.Property(int, lambda x: x.sideBarLocation().value)

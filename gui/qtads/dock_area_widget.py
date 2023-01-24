@@ -8,7 +8,7 @@ from .auto_hide_dock_container import CAutoHideDockContainer
 
 from .dock_state_reader import CDockStateReader
 from .util import (findParent, DEBUG_LEVEL, hideEmptyParentSplitters,
-                   emitTopLevelEventForWidget, testFlag, LINUX, WINDOWS,setFlag)
+                   emitTopLevelEventForWidget, testFlag, LINUX, WINDOWS, setFlag)
 from .define import (EnumTitleBarButton,
                      EnumDockWidgetFeature,
                      EnumDockWidgetArea,
@@ -16,13 +16,15 @@ from .define import (EnumTitleBarButton,
                      EnumBitwiseOP,
                      EnumBorderLocation,
                      EnumSideBarLocation,
+                     DOCK_MANAGER_DEFAULT_CONFIG,
+                     AUTO_HIDE_DEFAULT_CONFIG,
+                     EnumAutoHideFlag,
                      EnumDockMgrConfigFlag)
 from .dock_area_layout import CDockAreaLayout
+from .dock_splitter import CDockSplitter
 
 if TYPE_CHECKING:
     from .dock_container_widget import CDockContainerWidget
-    from .dock_splitter import CDockSplitter
-    from . import (DockContainerWidget, DockWidget)
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +84,9 @@ class DockAreaWidgetMgr:
         -------
         value : DockWidget
         '''
-        return self.contentsLayout.widget(index)
+        from . import CDockWidget
+        _w = self.contentsLayout.widget(index)
+        return _w if isinstance(_w, CDockWidget) else None
 
     def tabWidgetAt(self, index: int) -> 'CDockWidgetTab':
         '''
@@ -110,8 +114,8 @@ class DockAreaWidgetMgr:
         -------
         value : QAction
         '''
-        # todo: property in const defined
-        return dock_widget.property('action')
+        _action = dock_widget.property('action')
+        return _action if isinstance(_action, QtGui.QAction) else None
 
     def dockWidgetIndex(self, dock_widget: 'CDockWidget') -> int:
         '''
@@ -151,6 +155,7 @@ class DockAreaWidgetMgr:
         _undock_button.setEnabled(testFlag(self._this.features(), EnumDockWidgetFeature.FLOATABLE))
         _pinn_button = self.titleBar.button(EnumTitleBarButton.AUTO_HIDE)
         _pinn_button.setEnabled(testFlag(self._this.features(), EnumDockWidgetFeature.PINNABLE))
+        self.titleBar.updateDockWidgetActionsButtons()
         self.updateTitleBarButtons = False
 
     def updateTitleBarButtonVisibility(self, is_top_level: bool):
@@ -216,6 +221,10 @@ class CDockAreaWidget(QtWidgets.QFrame):
     def __repr__(self):
         return f'<{self.__class__.__name__}>'
 
+    @staticmethod
+    def isAutoHideFeatureEnable():
+        return EnumAutoHideFlag.AutoHideFeatureEnabled in AUTO_HIDE_DEFAULT_CONFIG
+
     def onTabCloseRequested(self, index: int):
         '''
         On tab close requested
@@ -280,6 +289,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
         if index < 0 or index > self._mgr.contentsLayout.count():
             index = self._mgr.contentsLayout.count()
         self._mgr.contentsLayout.insertWidget(index, dock_widget)
+        dock_widget.setDockArea(self)
         dock_widget.tabWidget().setDockAreaWidget(self)
         _tab_widget = dock_widget.tabWidget()
 
@@ -322,14 +332,15 @@ class CDockAreaWidget(QtWidgets.QFrame):
         ----------
         dock_widget : DockWidget
         '''
-        logger.debug('DockAreaWidget.removeDockWidget')
+        logger.debug('DockAreaWidget.removeDockWidget prepared')
         if dock_widget is None:
             return
         if self.isAutoHide():
             self.autoHideDockContainer().cleanupAndDelete()
             return
+        logger.debug('DockAreaWidget.removeDockWidget')
         _current_dock_widget = self.currentDockWidget()
-        _next_open_dock_widget = self.nextOpenDockWidget(dock_widget) if dock_widget == _current_dock_widget else None
+        _next_open_dock_widget = self.nextOpenDockWidget(dock_widget) if dock_widget is _current_dock_widget else None
         self._mgr.contentsLayout.removeWidget(dock_widget)
         _tab_w = dock_widget.tabWidget()
         _tab_w.hide()
@@ -339,7 +350,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
         _dock_container = self.dockContainer()
         if _next_open_dock_widget is not None:
             self.setCurrentDockWidget(_next_open_dock_widget)
-        elif self._mgr.contentsLayout.isEmpty() and _dock_container.dockAreaCount >= 1:
+        elif self._mgr.contentsLayout.isEmpty() and _dock_container.dockAreaCount() >= 1:
             logger.debug('Dock Area empty')
             _dock_container.removeDockArea(self)
             self.deleteLater()
@@ -348,7 +359,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
                 if _fwc:
                     _fwc.hide()
                     _fwc.deleteLater()
-        elif dock_widget == _current_dock_widget:
+        elif dock_widget is _current_dock_widget:
             self.hideAreaWithNoVisibleContent()
         self._mgr.updateTitleBarButtonStates()
         self.updateTitleBarVisibility()
@@ -358,7 +369,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
             _top_level_dw.emitTopLevelChanged(True)
 
         if DEBUG_LEVEL > 0:
-            _dock_container.dump_layout()
+            _dock_container.dumpLayout()
 
     def toggleDockWidgetView(self, dock_widget: 'DockWidget', open_: bool):
         '''
@@ -368,7 +379,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
         ----------
         dock_widget : DockWidget
             Unused
-        open : bool
+        open_ : bool
             Unused
         '''
         # pylint: disable=unused-argument
@@ -392,8 +403,8 @@ class CDockAreaWidget(QtWidgets.QFrame):
         '''
         _open_dock_widgets = self.openedDockWidgets()
         _count = len(_open_dock_widgets)
-        if _count > 1 or (_count == 1 and _open_dock_widgets[0] != dock_widget):
-            if _open_dock_widgets[-1] == dock_widget:
+        if _count > 1 or (_count == 1 and _open_dock_widgets[0] is not dock_widget):
+            if _open_dock_widgets[-1] is dock_widget:
                 _next_dock_widget = _open_dock_widgets[-2]
                 # search backwards for widget with tab
                 for i in reversed(range(len(_open_dock_widgets) - 2)):
@@ -436,7 +447,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
         Call this function, if you already know, that the dock does not contain
         any visible content (any open dock widgets).
         '''
-        self.toggle_view(False)
+        self.toggleView(False)
 
         # Hide empty parent splitters
         _splitter = findParent(CDockSplitter, self)
@@ -444,7 +455,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
 
         # Hide empty floating widget
         _container = self.dockContainer()
-        if not _container.isFloating() and not testFlag(self.dockManager().flags(), EnumDockAreaFlag.HideSingleWidgetTitleBar):
+        if not _container.isFloating() and EnumDockMgrConfigFlag.HideSingleCentralWidgetTitleBar not in DOCK_MANAGER_DEFAULT_CONFIG:
             return
 
         self.updateTitleBarVisibility()
@@ -452,7 +463,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
         _floating_widget = _container.floatingWidget()
         if _top_level_widget is not None:
             if _floating_widget:
-                _floating_widget.update_window_title()
+                _floating_widget.updateWindowTitle()
             emitTopLevelEventForWidget(_top_level_widget, True)
 
         elif not _container.openedDockAreas() and _floating_widget:
@@ -465,18 +476,18 @@ class CDockAreaWidget(QtWidgets.QFrame):
         Updates the dock area layout and components visibility
         '''
         _container = self.dockContainer()
-        if not _container:
+        if _container is None:
             return
         if self._mgr.titleBar is None:
             return
         _is_auto_hide = self.isAutoHide()
-        if not testFlag(self.dockManager().flags(), EnumDockMgrConfigFlag.AlwaysShowTabs):
-            _hidden = _container.hasTopLevelDockWidget() and _container.isFloating() or testFlag(self.dockManager().flags,
-                                                                                                 EnumDockMgrConfigFlag.HideSingleCentralWidgetTitleBar)
+        if EnumDockMgrConfigFlag.AlwaysShowTabs not in DOCK_MANAGER_DEFAULT_CONFIG:
+            _hidden = _container.hasTopLevelDockWidget() and (_container.isFloating() or testFlag(DOCK_MANAGER_DEFAULT_CONFIG,
+                                                                                                  EnumDockMgrConfigFlag.HideSingleCentralWidgetTitleBar))
             _hidden |= testFlag(self._mgr.flags, EnumDockAreaFlag.HideSingleWidgetTitleBar) and self.openDockWidgetsCount() == 1
             _hidden &= not _is_auto_hide
             self._mgr.titleBar.setVisible(not _hidden)
-        if self.isAutoHideFeatureEnabled():
+        if self.isAutoHideFeatureEnable():
             _tb = self._mgr.titleBar.tabBar()
             _tb.setVisible(not _is_auto_hide)
             self._mgr.titleBar.autoHideTitleLabel().setVisible(_is_auto_hide)
@@ -512,7 +523,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
             return
 
         self.setCurrentIndex(_index)
-        dock_widget.setCloseState(False)
+        dock_widget.setClosedState(False)
 
     def markTitleBarMenuOutdated(self):
         '''
@@ -540,7 +551,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
         self.setVisible(open_)
         self.sigViewToggled.emit(open_)
 
-    def toggleAutoHide(self, location: EnumSideBarLocation=EnumSideBarLocation.NONE):
+    def toggleAutoHide(self, location: EnumSideBarLocation = EnumSideBarLocation.NONE):
 
         if not self.isAutoHideFeatureEnable():
             return
@@ -564,13 +575,12 @@ class CDockAreaWidget(QtWidgets.QFrame):
         -------
         value : DockContainerWidget
         '''
-
-        return findParent('DockContainerWidget', self)
+        return findParent('CDockContainerWidget', self)
 
     def autoHideDockContainer(self):
         return self._mgr.autoHideDockContainer
 
-    def setAutoHide(self, enable: bool, location: EnumSideBarLocation):
+    def setAutoHide(self, enable: bool, location: EnumSideBarLocation = EnumSideBarLocation.NONE):
         if not self.isAutoHideFeatureEnable():
             return
         if not enable:
@@ -593,8 +603,8 @@ class CDockAreaWidget(QtWidgets.QFrame):
     def isTopLevelArea(self):
         _c = self.dockContainer()
         if _c is None:
-            return
-        return _c.topLevelArea() is self
+            return False
+        return _c.topLevelDockArea() is self
 
     def isAutoHide(self):
         return self._mgr.autoHideDockContainer is not None
@@ -602,7 +612,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
     def isCentralWidgetArea(self):
         if self.dockWidgetsCount() != 1:
             return False
-        return self.dockManager().centralWidget() is self.dockWidgets().constFirst()
+        return self.dockManager().centralWidget() is self.dockWidgets()[0]
 
     def titleBarGeometry(self) -> QtCore.QRect:
         '''
@@ -693,7 +703,9 @@ class CDockAreaWidget(QtWidgets.QFrame):
         -------
         value : DockWidget
         '''
-        return self._mgr.contentsLayout.widget(index)
+        from . import CDockWidget
+        _w = self._mgr.contentsLayout.widget(index)
+        return _w if isinstance(_w, CDockWidget) else None
 
     def currentIndex(self) -> int:
         '''
@@ -722,7 +734,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
         value : int
         '''
         for i in range(self._mgr.contentsLayout.count()):
-            if not self.dock_widget(i).isClosed():
+            if not self.dockWidget(i).isClosed():
                 return i
 
         return -1
@@ -769,67 +781,69 @@ class CDockAreaWidget(QtWidgets.QFrame):
         _name = _current_dock_widget.objectName() if _current_dock_widget else ''
         stream.writeAttribute("Current", _name)
 
-        if self._mgr.allowedAreas != self.defaultAllowedAreas:
-            stream.writeAttribute("AllowedAreas", str(self._mgr.allowedAreas))
-        if self._mgr.flags != self.defaultFlags:
-            stream.writeAttribute("Flags", str(self._mgr.flags))
+        if self._mgr.allowedAreas != EnumDockWidgetArea.ALL_DOCK_AREAS:
+            # fixme: check if enum could store as string
+            stream.writeAttribute("AllowedAreas", str(self._mgr.allowedAreas.value))
+        if self._mgr.flags != EnumDockAreaFlag.DefaultFlags:
+            stream.writeAttribute("Flags", str(self._mgr.flags.value))
         logger.debug('DockAreaWidget.saveState TabCount: %s current: %s',
                      self._mgr.contentsLayout.count(), _name)
 
         for i in range(self._mgr.contentsLayout.count()):
             self.dockWidget(i).saveState(stream)
         stream.writeEndElement()
-
-    def restoreState(self, s: CDockStateReader, created_widget: 'CDockAreaWidget', testing: bool, container: 'CDockContainerWidget'):
-        # todo: different
-        _ok = int(s.attributes().value("Tabs"))
+    @staticmethod
+    def restoreState(s: CDockStateReader, testing: bool, container: 'CDockContainerWidget'):
+        # modified: different behaviour
+        _ok = s.attributes().value("Tabs")
         if not _ok:
             return False
         _current_w = s.attributes().value("Current")
-        logger.debug('Restore NodeDockArea Tabs:: %s current: %s',
-                     _ok, _current_w)
+        logger.debug('Restore NodeDockArea Tabs: %s current: %s',_ok, _current_w)
         _dm = container.dockManager()
         _da = None
         if not testing:
             _da = CDockAreaWidget(_dm, container)
             _allowed_areas_attr = s.attributes().value("AllowedAreas")
-            if not _allowed_areas_attr.isEmpty():
-                _da.setAllowedAreas(int(_allowed_areas_attr))
+            if _allowed_areas_attr:
+                _da.setAllowedAreas(EnumDockWidgetArea(int(_allowed_areas_attr)))
             _flags_attr = s.attributes().value("Flags")
-            if not _flags_attr.isEmpty():
-                _da.setDockAreaFlags(int(_flags_attr))
+            if _flags_attr:
+                _da.setDockAreaFlags(EnumDockAreaFlag(int(_flags_attr)))
         while s.readNextStartElement():
             if s.name() != 'Widget':
                 continue
             _obj_name = s.attributes().value("Name")
-            if _obj_name.isEmpty():
+            if not _obj_name:
                 return False
             _closed = s.attributes().value("Closed")
-            if not int(_closed):
+            if not _closed:
                 return False
+            else:
+                _closed=int(_closed)
             s.skipCurrentElement()
-            _dw = self.dockManager().findDockWidget(_obj_name.toString())
+            _dw = _dm.findDockWidget(_obj_name)
             if _dw is None or testing:
                 continue
-            logger.debug('Dock Widget found - parent=%s' % _dw.parent())
+            logger.debug('Dock Widget found %s parent=%s' % (_dw,_dw.parent()))
             if _dw.autoHideDockContainer():
                 _dw.autoHideDockContainer().cleanupAndDelete()
             _da.hide()
             _da.addDockWidget(_dw)
             _dw.setToggleViewActionChecked(not _closed)
-            _dw.setClosedState(_closed)
+            _dw.setClosedState(bool(_closed))
             _dw.setProperty('close', _closed)
             _dw.setProperty('dirty', False)
         if testing:
-            return True
+            return True,None
         if not _da.dockWidgetsCount():
+            _da.deleteLater()
             _da = None
         else:
             _da.setProperty('currentDockWidget', _current_w)
-        created_widget = _da
-        return True
+        return True, _da
 
-    def features(self, mode: EnumBitwiseOP=EnumBitwiseOP.AND) -> 'EnumDockWidgetFeature':
+    def features(self, mode: EnumBitwiseOP = EnumBitwiseOP.AND) -> 'EnumDockWidgetFeature':
         '''
         This functions returns the dock widget features of all dock widget in
         this area. A bitwise and is used to combine the flags of all dock
@@ -902,7 +916,7 @@ class CDockAreaWidget(QtWidgets.QFrame):
         _tab_bar.setCurrentIndex(index)
         self._mgr.contentsLayout.setCurrentIndex(index)
         self._mgr.contentsLayout.currentWidget().show()
-        self.sigCurrentChanging.emit(index)
+        self.sigCurrentChanged.emit(index)
 
     def allowedAreas(self):
         return self._mgr.allowedAreas
@@ -921,22 +935,27 @@ class CDockAreaWidget(QtWidgets.QFrame):
 
     def setDockAreaFlag(self, flag, on):
         _flags = self.dockAreaFlags()
-        _flags=setFlag(_flags, flag, on)
+        _flags = setFlag(_flags, flag, on)
         self.setDockAreaFlags(_flags)
 
     def closeArea(self):
         '''
         Closes the dock area and all dock widgets in this area
         '''
+        # If there is only one single dock widget and this widget has the
+        # DeleteOnClose feature or CustomCloseHandling, then we delete the dock widget now;
+        # in the case of CustomCloseHandling, the CDockWidget class will emit its
+        # closeRequested signal and not actually delete unless the signal is handled in a way that deletes it
+        #
         _dws = self.openedDockWidgets()
         if len(_dws) == 1 and (testFlag(_dws[0].features(), EnumDockWidgetFeature.DELETE_ON_CLOSE) or
                                testFlag(_dws[0].features(), EnumDockWidgetFeature.CUSTOM_CLOSE_HANDLING)) and not self.isAutoHide():
             _dws[0].closeDockWidgetInternal()
         else:
             for x in _dws:
-                if (testFlag(_dws[0].features(), EnumDockWidgetFeature.DELETE_ON_CLOSE) or
-                        testFlag(_dws[0].features(), EnumDockWidgetFeature.CUSTOM_CLOSE_HANDLING) or testFlag(_dws[0].features(),
-                                                                                                              EnumDockWidgetFeature.FORCE_CLOSE_WITH_AREA)):
+                if (testFlag(_dws[0].features(), EnumDockWidgetFeature.DELETE_ON_CLOSE) and
+                        testFlag(_dws[0].features(), EnumDockWidgetFeature.FORCE_CLOSE_WITH_AREA) or testFlag(_dws[0].features(),
+                                                                                                              EnumDockWidgetFeature.CUSTOM_CLOSE_HANDLING)):
                     x.closeDockWidgetInternal()
                 elif testFlag(_dws[0].features(), EnumDockWidgetFeature.DELETE_ON_CLOSE) and self.isAutoHide():
                     x.closeDockWidgetInternal()
@@ -947,69 +966,71 @@ class CDockAreaWidget(QtWidgets.QFrame):
         _container = self.dockContainer()
         _content_rect = _container.contentRect()
         _borders = EnumBorderLocation.BorderNone
-        _da_t_l = self.mapTo(_container, _content_rect.topLeft())
-        _da_rect = QtCore.QRect()
+        _da_t_l = self.mapTo(_container, self.rect().topLeft())
+        _da_rect = self.rect()
         _da_rect.moveTo(_da_t_l)
         _aspect_ration = _da_rect.width() / (max(1, _da_rect.height()) * 1.0)
         _size_ratio = _content_rect.width() / _da_rect.width()
         _mini_border_distance = 16
         _horizontal_orientation = (_aspect_ration > 1.0 and _size_ratio < 3.0)
         # measure border distances - a distance less than 16 px means we touch the
-        _border_distance = []
+        _border_distance = [0, 0, 0, 0]
         _distance = abs(_content_rect.topLeft().y() - _da_rect.topLeft().y())
-        _border_distance[EnumSideBarLocation.TOP] = 0 if (_distance < _mini_border_distance) else _distance
-        if not _border_distance[EnumSideBarLocation.TOP]:
+        _border_distance[EnumSideBarLocation.TOP.value] = 0 if (_distance < _mini_border_distance) else _distance
+        if not _border_distance[EnumSideBarLocation.TOP.value]:
             _borders |= EnumBorderLocation.BorderTop
 
         _distance = abs(_content_rect.bottomRight().y() - _da_rect.bottomRight().y())
-        _border_distance[EnumSideBarLocation.BOTTOM] = 0 if (_distance < _mini_border_distance) else _distance
-        if not _border_distance[EnumSideBarLocation.BOTTOM]:
+        _border_distance[EnumSideBarLocation.BOTTOM.value] = 0 if (_distance < _mini_border_distance) else _distance
+        if not _border_distance[EnumSideBarLocation.BOTTOM.value]:
             _borders |= EnumBorderLocation.BorderBottom
 
         _distance = abs(_content_rect.topLeft().x() - _da_rect.topLeft().x())
-        _border_distance[EnumSideBarLocation.LEFT] = 0 if (_distance < _mini_border_distance) else _distance
-        if not _border_distance[EnumSideBarLocation.LEFT]:
+        _border_distance[EnumSideBarLocation.LEFT.value] = 0 if (_distance < _mini_border_distance) else _distance
+        if not _border_distance[EnumSideBarLocation.LEFT.value]:
             _borders |= EnumBorderLocation.BorderLeft
 
         _distance = abs(_content_rect.bottomRight().x() - _da_rect.bottomRight().x())
-        _border_distance[EnumSideBarLocation.RIGHT] = 0 if (_distance < _mini_border_distance) else _distance
-        if not _border_distance[EnumSideBarLocation.RIGHT]:
+        _border_distance[EnumSideBarLocation.RIGHT.value] = 0 if (_distance < _mini_border_distance) else _distance
+        if not _border_distance[EnumSideBarLocation.RIGHT.value]:
             _borders |= EnumBorderLocation.BorderRight
 
         _side_tab_loc = EnumSideBarLocation.RIGHT
-        if _borders:
-            if _borders == EnumBorderLocation.BorderAll:
-                _side_tab_loc = EnumSideBarLocation.BOTTOM if _horizontal_orientation else EnumSideBarLocation.RIGHT
-            elif _borders == EnumBorderLocation.BorderVerticalBottom:
-                _side_tab_loc = EnumSideBarLocation.BOTTOM
-            elif _borders == EnumBorderLocation.BorderVerticalTop:
-                _side_tab_loc = EnumSideBarLocation.TOP
-            elif _borders == EnumBorderLocation.BorderHorizontalLeft:
-                _side_tab_loc = EnumSideBarLocation.LEFT
-            elif _borders == EnumBorderLocation.BorderHorizontalRight:
-                _side_tab_loc = EnumSideBarLocation.RIGHT
-            elif _borders == EnumBorderLocation.BorderVertical:
-                _side_tab_loc = EnumSideBarLocation.BOTTOM
-            elif _borders == EnumBorderLocation.BorderHorizontal:
-                _side_tab_loc = EnumSideBarLocation.RIGHT
-            # corner
-            elif _borders == EnumBorderLocation.BorderTopLeft:
-                _side_tab_loc = EnumSideBarLocation.TOP if _horizontal_orientation else EnumSideBarLocation.LEFT
-            elif _borders == EnumBorderLocation.BorderTopRight:
-                _side_tab_loc = EnumSideBarLocation.TOP if _horizontal_orientation else EnumSideBarLocation.RIGHT
-            elif _borders == EnumBorderLocation.BorderBottomLeft:
-                _side_tab_loc = EnumSideBarLocation.BOTTOM if _horizontal_orientation else EnumSideBarLocation.LEFT
-            elif _borders == EnumBorderLocation.BorderBottomRight:
-                _side_tab_loc = EnumSideBarLocation.BOTTOM if _horizontal_orientation else EnumSideBarLocation.RIGHT
-            # only one border touched
-            elif _borders == EnumBorderLocation.BorderLeft:
-                _side_tab_loc = EnumSideBarLocation.LEFT
-            elif _borders == EnumBorderLocation.BorderRight:
-                _side_tab_loc = EnumSideBarLocation.RIGHT
-            elif _borders == EnumBorderLocation.BorderTop:
-                _side_tab_loc = EnumSideBarLocation.TOP
-            elif _borders == EnumBorderLocation.BorderBottom:
-                _side_tab_loc = EnumSideBarLocation.BOTTOM
+        # It's touching all borders
+        if _borders == EnumBorderLocation.BorderAll:
+            _side_tab_loc = EnumSideBarLocation.BOTTOM if _horizontal_orientation else EnumSideBarLocation.RIGHT
+        # It's touching 3 borders
+        elif _borders == EnumBorderLocation.BorderVerticalBottom:
+            _side_tab_loc = EnumSideBarLocation.BOTTOM
+        elif _borders == EnumBorderLocation.BorderVerticalTop:
+            _side_tab_loc = EnumSideBarLocation.TOP
+        elif _borders == EnumBorderLocation.BorderHorizontalLeft:
+            _side_tab_loc = EnumSideBarLocation.LEFT
+        elif _borders == EnumBorderLocation.BorderHorizontalRight:
+            _side_tab_loc = EnumSideBarLocation.RIGHT
+        # Its touching horizontal or vertical borders
+        elif _borders == EnumBorderLocation.BorderVertical:
+            _side_tab_loc = EnumSideBarLocation.BOTTOM
+        elif _borders == EnumBorderLocation.BorderHorizontal:
+            _side_tab_loc = EnumSideBarLocation.RIGHT
+        # corner
+        elif _borders == EnumBorderLocation.BorderTopLeft:
+            _side_tab_loc = EnumSideBarLocation.TOP if _horizontal_orientation else EnumSideBarLocation.LEFT
+        elif _borders == EnumBorderLocation.BorderTopRight:
+            _side_tab_loc = EnumSideBarLocation.TOP if _horizontal_orientation else EnumSideBarLocation.RIGHT
+        elif _borders == EnumBorderLocation.BorderBottomLeft:
+            _side_tab_loc = EnumSideBarLocation.BOTTOM if _horizontal_orientation else EnumSideBarLocation.LEFT
+        elif _borders == EnumBorderLocation.BorderBottomRight:
+            _side_tab_loc = EnumSideBarLocation.BOTTOM if _horizontal_orientation else EnumSideBarLocation.RIGHT
+        # only one border touched
+        elif _borders == EnumBorderLocation.BorderLeft:
+            _side_tab_loc = EnumSideBarLocation.LEFT
+        elif _borders == EnumBorderLocation.BorderRight:
+            _side_tab_loc = EnumSideBarLocation.RIGHT
+        elif _borders == EnumBorderLocation.BorderTop:
+            _side_tab_loc = EnumSideBarLocation.TOP
+        elif _borders == EnumBorderLocation.BorderBottom:
+            _side_tab_loc = EnumSideBarLocation.BOTTOM
         return _side_tab_loc
 
     def closeOtherAreas(self):
@@ -1018,9 +1039,8 @@ class CDockAreaWidget(QtWidgets.QFrame):
         '''
         self.dockContainer().closeOtherAreas(self)
 
-
-if WINDOWS:
     def event(self, event: QtCore.QEvent):
-        if event.type() == QtCore.QEvent.Type.PlatformSurface:
-            return True
+        if WINDOWS:
+            if event.type() == QtCore.QEvent.Type.PlatformSurface:
+                return True
         return super().event(event)

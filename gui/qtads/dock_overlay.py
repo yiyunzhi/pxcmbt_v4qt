@@ -1,7 +1,9 @@
 from typing import Dict
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .define import (EnumOverlayMode, EnumDockWidgetArea, EnumIconColor, AREA_ALIGNMENT)
+from .define import (EnumOverlayMode,
+                     EnumDockWidgetArea, EnumIconColor,
+                     AREA_ALIGNMENT)
 from .dock_container_widget import CDockAreaWidget
 from .util import LINUX
 
@@ -111,11 +113,12 @@ class CDockOverlay(QtWidgets.QFrame):
             return _result
 
         _dock_area = self._mgr.targetWidget
-        if isinstance(_dock_area, CDockAreaWidget):
-            if (EnumDockWidgetArea.CENTER in _dock_area.allowedAreas()
-                    and not _dock_area.titleBar().isHidde()
-                    and _dock_area.titleBarGeometry().contains(QtGui.QCursor.pos())):
-                return EnumDockWidgetArea.CENTER
+        if not isinstance(_dock_area, CDockAreaWidget):
+            return _result
+        if (EnumDockWidgetArea.CENTER in _dock_area.allowedAreas()
+                and not _dock_area.titleBar().isHidden()
+                and _dock_area.titleBarGeometry().contains(_dock_area.mapFromGlobal(QtGui.QCursor.pos()))):
+            return EnumDockWidgetArea.CENTER
 
         return _result
 
@@ -187,7 +190,7 @@ class CDockOverlay(QtWidgets.QFrame):
         if not self._mgr.dropPreviewEnabled:
             self._mgr.dropAreaRect = QtCore.QRect()
             return
-        _r = QtCore.QRect()
+        _r = self.rect()
         _da = self.dropAreaUnderCursor()
         _factor = 3 if self._mgr.mode == EnumOverlayMode.CONTAINER else 2
         if _da == EnumDockWidgetArea.TOP:
@@ -374,12 +377,6 @@ class DockOverlayCrossMgr:
 
         return _color
 
-    @staticmethod
-    def dropIndicatorWidth(l: QtWidgets.QLabel):
-        if LINUX:
-            return 40
-        return l.fontMetrics().height() * 3.0
-
     def createDropIndicatorWidget(self, area: EnumDockWidgetArea, mode: EnumOverlayMode) -> QtWidgets.QLabel:
         '''
         Create drop indicator widget
@@ -396,7 +393,7 @@ class DockOverlayCrossMgr:
         _l = QtWidgets.QLabel()
         _l.setObjectName("DockWidgetAreaLabel")
 
-        _metric = self.dropIndicatorWidth(_l)
+        _metric = _drop_indicator_width(_l)
         _size = QtCore.QSizeF(_metric, _metric)
         _l.setPixmap(self.createHighDpiDropIndicatorPixmap(_size, area, mode))
         _l.setWindowFlags(QtCore.Qt.WindowType.Tool | QtCore.Qt.WindowType.FramelessWindowHint)
@@ -413,8 +410,9 @@ class DockOverlayCrossMgr:
         widget : QWidget
         '''
         if isinstance(widget, QtWidgets.QLabel):
-            _metric = self.dropIndicatorWidth(widget)
+            _metric = _drop_indicator_width(widget)
             _size = QtCore.QSizeF(_metric, _metric)
+            # fixme: _area to enum???
             _area = widget.property('dockWidgetArea')
             widget.setPixmap(self.createHighDpiDropIndicatorPixmap(_size, _area, self.mode))
 
@@ -467,29 +465,29 @@ class DockOverlayCrossMgr:
         _non_area_rect = QtCore.QRectF()
 
         if area == EnumDockWidgetArea.TOP:
-            area_rect = QtCore.QRectF(_base_rect.x(), _base_rect.y(), _base_rect.width(),
-                                      _base_rect.height() * .5)
-            non_area_rect = QtCore.QRectF(_base_rect.x(), _shadow_rect.height() * .5,
-                                          _base_rect.width(), _base_rect.height() * .5)
-            area_line = QtCore.QLineF(area_rect.bottomLeft(), area_rect.bottomRight())
+            _area_rect = QtCore.QRectF(_base_rect.x(), _base_rect.y(), _base_rect.width(),
+                                       _base_rect.height() * .5)
+            _non_area_rect = QtCore.QRectF(_base_rect.x(), _shadow_rect.height() * .5,
+                                           _base_rect.width(), _base_rect.height() * .5)
+            _area_line = QtCore.QLineF(_area_rect.bottomLeft(), _area_rect.bottomRight())
         elif area == EnumDockWidgetArea.RIGHT:
-            area_rect = QtCore.QRectF(_shadow_rect.width() * .5, _base_rect.y(),
-                                      _base_rect.width() * .5, _base_rect.height())
-            non_area_rect = QtCore.QRectF(_base_rect.x(), _base_rect.y(),
-                                          _base_rect.width() * .5, _base_rect.height())
-            area_line = QtCore.QLineF(area_rect.topLeft(), area_rect.bottomLeft())
+            _area_rect = QtCore.QRectF(_shadow_rect.width() * .5, _base_rect.y(),
+                                       _base_rect.width() * .5, _base_rect.height())
+            _non_area_rect = QtCore.QRectF(_base_rect.x(), _base_rect.y(),
+                                           _base_rect.width() * .5, _base_rect.height())
+            _area_line = QtCore.QLineF(_area_rect.topLeft(), _area_rect.bottomLeft())
         elif area == EnumDockWidgetArea.BOTTOM:
-            area_rect = QtCore.QRectF(_base_rect.x(), _shadow_rect.height() * .5,
-                                      _base_rect.width(), _base_rect.height() * .5)
-            non_area_rect = QtCore.QRectF(_base_rect.x(), _base_rect.y(),
-                                          _base_rect.width(), _base_rect.height() * .5)
-            area_line = QtCore.QLineF(area_rect.topLeft(), area_rect.topRight())
+            _area_rect = QtCore.QRectF(_base_rect.x(), _shadow_rect.height() * .5,
+                                       _base_rect.width(), _base_rect.height() * .5)
+            _non_area_rect = QtCore.QRectF(_base_rect.x(), _base_rect.y(),
+                                           _base_rect.width(), _base_rect.height() * .5)
+            _area_line = QtCore.QLineF(_area_rect.topLeft(), _area_rect.topRight())
         elif area == EnumDockWidgetArea.LEFT:
-            area_rect = QtCore.QRectF(_base_rect.x(), _base_rect.y(),
-                                      _base_rect.width() * .5, _base_rect.height())
-            non_area_rect = QtCore.QRectF(_shadow_rect.width() * .5, _base_rect.y(),
-                                          _base_rect.width() * .5, _base_rect.height())
-            area_line = QtCore.QLineF(area_rect.topRight(), area_rect.bottomRight())
+            _area_rect = QtCore.QRectF(_base_rect.x(), _base_rect.y(),
+                                       _base_rect.width() * .5, _base_rect.height())
+            _non_area_rect = QtCore.QRectF(_shadow_rect.width() * .5, _base_rect.y(),
+                                           _base_rect.width() * .5, _base_rect.height())
+            _area_line = QtCore.QLineF(_area_rect.topRight(), _area_rect.bottomRight())
 
         _base_size = _base_rect.size()
         if (EnumOverlayMode.CONTAINER == mode
@@ -658,7 +656,7 @@ class CDockOverlayCross(QtWidgets.QWidget):
             for area in self._all_areas
         }
 
-        self._mgr.last_device_pixel_ratio = (
+        self._mgr.lastDevicePixelRatio = (
             self.devicePixelRatioF()
             if hasattr(self, 'devicePixelRatioF')
             else self.devicePixelRatio())
@@ -771,8 +769,8 @@ class CDockOverlayCross(QtWidgets.QWidget):
         # Insert new widgets into grid.
         self._mgr.dropIndicatorWidgets = widgets
         for area, widget in self._mgr.dropIndicatorWidgets.items():
-            pos = self._mgr.areaGridPosition(area)
-            self._mgr.gridLayout.addWidget(widget, pos.x(), pos.y(),
+            _pos = self._mgr.areaGridPosition(area)
+            self._mgr.gridLayout.addWidget(widget, _pos.x(), _pos.y(),
                                            AREA_ALIGNMENT[area])
 
         if EnumOverlayMode.DOCK_AREA == self._mgr.mode:

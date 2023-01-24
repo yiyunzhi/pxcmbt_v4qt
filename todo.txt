@@ -1,2 +1,43 @@
--componentsFactory
--repolishstyle
+-------------qtads-------------
+done: componentsFactory
+done: repolishstyle
+done: indicator not been right drawn
+done: dockSplitter color not painted
+done: tab not right been drawn
+done: titlebar seems not right displayed
+done: titlebar menu not right displayed
+done: tab not focused while dock content get focused
+done: autoHideTab initial in top area???
+done: auto hide tab could not restore: sideTabWidget not destroyed while removed from layout
+done: test EnumDockMgrConfigFlag.DragPreviewShowsContentPixmap in DOCK_MANAGER_DEFAULT_CONFIG in floating_drag_preview.py
+done: floatDock zindex not right
+done: tab->floating there a strange over on the mainwindow
+done: test window destroy
+done: test layout store and restore
+done: test restoreContainer in dockmanager
+done: test central widget
+done: test add floating widget
+
+done: auto hide tab style not good: css property not define in class
+done: auto hide collapsed  view can not resize: wrong implementation
+done: tabtitlebar maxheight and size not overlap
+todo: import for typing checking ugly
+todo: event hook while destroy??
+done: make dockmanager inherit or using individual stylesheet
+-------------theme--------------
+done: separator in menubar ugly
+done: replace standard icon
+done: style for qtads
+done: splash window
+done: copy pin, detach, arrowdown, to theme folder
+done: paletteChangeEvent not triggert or three times. use custom event instead.
+done: use weakref of icon in a global registry, if theme changed then change the icon color in weakref.
+-------------app--------------
+todo: ->doing: selector: welcome,model,blocks,requirements(in docu group or testsuite???),
+    testsuite,test-executor??,docu(test result in testexecutor group),extends(function in define group)
+    ,define, -spacer- help
+done: improve QTADS while darktheme setup
+done: left put a mode select sidebar, default only centraldockarea
+done: mode selector in group, every action from same group will in tabWidget grouped.
+
+

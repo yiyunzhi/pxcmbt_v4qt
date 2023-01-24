@@ -3,22 +3,20 @@ from typing import TYPE_CHECKING, Optional
 import logging
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .define import (EnumDockFlags, EnumDragState,EnumBitwiseOP,
+from .define import (EnumDockFlags, EnumDragState, EnumBitwiseOP,
                      EnumDockWidgetFeature, EnumTitleBarButton,
                      EnumSideBarLocation, EnumDockMgrConfigFlag,
                      DOCK_MANAGER_DEFAULT_CONFIG, EnumAutoHideFlag,
-                     AUTO_HIDE_DEFAULT_CONFIG,EnumDockWidgetArea)
-from .util import setButtonIcon, qApp, evtDockedWidgetDragStartEvent
-from .floating_frag_preview import CFloatingDragPreview
+                     AUTO_HIDE_DEFAULT_CONFIG, EnumDockWidgetArea, EnumADSIcon)
+from .util import setButtonIcon, getQApp, evtDockedWidgetDragStartEvent
+from .floating_drag_preview import CFloatingDragPreview
 from .dock_area_tab_bar import CDockAreaTabBar
 from .eliding_label import CElidingLabel
 
 if TYPE_CHECKING:
-
     from .dock_area_widget import CDockAreaWidget
     from .dock_manager import CDockManager
     from .floating_dock_container import IFloatingWidget
-
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +110,7 @@ class DockAreaTitleBarMgr:
         self.tabsMenuButton.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
 
         _style = self._this.style()
-        setButtonIcon(_style, self.tabsMenuButton, QtWidgets.QStyle.StandardPixmap.SP_TitleBarUnshadeButton)
+        setButtonIcon(self.tabsMenuButton, QtWidgets.QStyle.StandardPixmap.SP_TitleBarUnshadeButton, EnumADSIcon.AREA_MENU)
 
         self.tabsMenu = QtWidgets.QMenu(self.tabsMenuButton)
         self.tabsMenu.setToolTipsVisible(True)
@@ -130,8 +128,8 @@ class DockAreaTitleBarMgr:
         self.undockButton.setAutoRaise(True)
         self.undockButton.setToolTip("Detach Group")
 
-        setButtonIcon(_style, self.undockButton,
-                      QtWidgets.QStyle.StandardPixmap.SP_TitleBarNormalButton)
+        setButtonIcon(self.undockButton,
+                      QtWidgets.QStyle.StandardPixmap.SP_TitleBarNormalButton, EnumADSIcon.AREA_UNDOCK)
 
         self.undockButton.setSizePolicy(*_btn_sp)
         self.layout.addWidget(self.undockButton, 0)
@@ -144,8 +142,8 @@ class DockAreaTitleBarMgr:
         self.autoHideButton.setObjectName('dockAreaAutoHideButton')
         self.autoHideButton.setAutoRaise(True)
         self.autoHideButton.setToolTip(self._this.titleBarButtonToolTip(EnumTitleBarButton.AUTO_HIDE))
-        setButtonIcon(_style, self.autoHideButton,
-                      QtWidgets.QStyle.StandardPixmap.SP_DialogOkButton)
+        setButtonIcon(self.autoHideButton,
+                      QtWidgets.QStyle.StandardPixmap.SP_DialogOkButton, EnumADSIcon.AUTO_HIDE)
         self.autoHideButton.setSizePolicy(*_btn_sp)
 
         self.autoHideButton.setCheckable(EnumAutoHideFlag.AutoHideButtonCheckable in AUTO_HIDE_DEFAULT_CONFIG)
@@ -157,7 +155,8 @@ class DockAreaTitleBarMgr:
         self.closeButton = CTitleBarButton(EnumDockMgrConfigFlag.DockAreaHasCloseButton in DOCK_MANAGER_DEFAULT_CONFIG)
         self.closeButton.setObjectName("dockAreaCloseButton")
         self.closeButton.setAutoRaise(True)
-        setButtonIcon(_style, self.closeButton, QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton)
+        setButtonIcon(self.closeButton, QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton, EnumADSIcon.AREA_CLOSE)
+
         self.closeButton.setToolTip(self._this.titleBarButtonToolTip(EnumTitleBarButton.CLOSE))
 
         self.closeButton.setSizePolicy(*_btn_sp)
@@ -192,7 +191,6 @@ class DockAreaTitleBarMgr:
         _float_dock_container = None
         _float_widget = None
         if _opaque_undocking:
-
             from .floating_dock_container import CFloatingDockContainer
             _float_widget = _float_dock_container = CFloatingDockContainer(dock_area=self.dockArea)
         else:
@@ -209,8 +207,8 @@ class DockAreaTitleBarMgr:
     def startFloating(self, offset: QtCore.QPoint):
         if self.dockArea.autoHideDockContainer() is not None:
             self.dockArea.autoHideDockContainer().hide()
-        _fw = self.makeAreaFloating(offset, EnumDragState.FLOATING_WIDGET)
-        qApp.postEvent(self.dockArea, QtCore.QEvent(evtDockedWidgetDragStartEvent))
+        self.floatingWidget = self.makeAreaFloating(offset, EnumDragState.FLOATING_WIDGET)
+        getQApp().postEvent(self.dockArea, QtCore.QEvent(QtCore.QEvent.Type(evtDockedWidgetDragStartEvent)))
 
     def _onAreaFloatingDraggingCanceled(self):
         self.dragState = EnumDragState.INACTIVE
@@ -235,6 +233,7 @@ class CDockAreaTitleBar(QtWidgets.QFrame):
     # if the user clicks on a tab item in the title bar tab menu.
     sigTabBarClicked = QtCore.Signal(int)
     LocationProperty = "Location"
+
     def __init__(self, parent: 'CDockAreaWidget'):
         '''
         Default Constructor
@@ -263,15 +262,15 @@ class CDockAreaTitleBar(QtWidgets.QFrame):
     def __repr__(self):
         return f'<{self.__class__.__name__}>'
 
-    def destroy(self, destroyWindow: bool = ..., destroySubWindows: bool = ...) -> None:
-        if self._mgr.closeButton is not None:
-            self._mgr.closeButton = None
-        if self._mgr.tabsMenuButton is not None:
-            self._mgr.tabsMenuButton = None
-        if self._mgr.undockButton is not None:
-            self._mgr.undockButton = None
-        self._mgr = None
-        super().destroy(destroyWindow, destroySubWindows)
+    # def destroy(self, destroyWindow: bool = ..., destroySubWindows: bool = ...) -> None:
+    #     if self._mgr.closeButton is not None:
+    #         self._mgr.closeButton = None
+    #     if self._mgr.tabsMenuButton is not None:
+    #         self._mgr.tabsMenuButton = None
+    #     if self._mgr.undockButton is not None:
+    #         self._mgr.undockButton = None
+    #     self._mgr = None
+    #     super().destroy(destroyWindow, destroySubWindows)
 
     def onTabsMenuAboutToShow(self):
         if not self._mgr.menuOutdated:
@@ -286,10 +285,15 @@ class CDockAreaTitleBar(QtWidgets.QFrame):
                 continue
 
             _tab = self._mgr.tabBar.tab(i)
-            _action = _menu.addAction(_tab.icon(), _tab.text())  # QAction(tab.icon(), tab.text()))
+            if _tab.icon() is not None:
+                _icon = _tab.icon()
+            else:
+                _spm = QtWidgets.QStyle.StandardPixmap.SP_TitleBarNormalButton
+                _icon = self.style().standardIcon(_spm)
+            _action = QtGui.QAction(_icon, _tab.text(), self)
             _action.setToolTip(_tab.toolTip())
             _action.setData(i)
-
+            _menu.addAction(_action)
         self._mgr.menuOutdated = False
 
     def onCloseButtonClicked(self):
@@ -301,7 +305,7 @@ class CDockAreaTitleBar(QtWidgets.QFrame):
 
     def onAutoHideButtonClicked(self):
         _c1 = EnumAutoHideFlag.AutoHideButtonTogglesArea in AUTO_HIDE_DEFAULT_CONFIG
-        _c2 = qApp.keyboardModifiers().testFlag(QtCore.Qt.KeyboardModifier.ControlModifier)
+        _c2 = getQApp().keyboardModifiers() & QtCore.Qt.KeyboardModifier.ControlModifier==QtCore.Qt.KeyboardModifier.ControlModifier
         if _c1 or _c2:
             self._mgr.dockArea.toggleAutoHide()
         else:
@@ -342,7 +346,7 @@ class CDockAreaTitleBar(QtWidgets.QFrame):
                 self._mgr.layout.removeWidget(x)
             self._mgr.dockWidgetActionsButtons.clear()
         _actions = _dock_widget.titleBarActions()
-        if _actions.isEmpty():
+        if not _actions:
             return
         _insert_idx = self.indexOf(self._mgr.tabsMenuButton)
         for x in _actions:
@@ -438,7 +442,7 @@ class CDockAreaTitleBar(QtWidgets.QFrame):
             self._mgr.dragStartMousePos = event.pos()
             self._mgr.dragState = EnumDragState.MOUSE_PRESSED
             if EnumDockMgrConfigFlag.FocusHighlighting in DOCK_MANAGER_DEFAULT_CONFIG:
-                self._mgr.dockManager().dockFocusController.setDockWidgetTabFocused(self._mgr.tabBar.currentTab())
+                self._mgr.dockManager().dockFocusController().setDockWidgetTabFocused(self._mgr.tabBar.currentTab())
             return
         super().mousePressEvent(event)
 
@@ -458,7 +462,7 @@ class CDockAreaTitleBar(QtWidgets.QFrame):
         super().mouseMoveEvent(event)
         _is_left_btn = event.buttons() & QtGui.Qt.MouseButton.LeftButton
         _is_inactive_drag = self._mgr.isDraggingState(EnumDragState.INACTIVE)
-        if _is_left_btn or _is_inactive_drag:
+        if not _is_left_btn or _is_inactive_drag:
             self._mgr.dragState = EnumDragState.INACTIVE
             return
             # move floating window
@@ -483,7 +487,7 @@ class CDockAreaTitleBar(QtWidgets.QFrame):
             return
 
         _drag_distance = (self._mgr.dragStartMousePos - event.pos()).manhattanLength()
-        if _drag_distance >= CDockManager.startDragDistance():
+        if _drag_distance >= QtWidgets.QApplication.startDragDistance() * 1.5:
             logger.debug('CDockAreaTitleBar::startFloating')
             self._mgr.startFloating(self._mgr.dragStartMousePos)
             _overlay = self._mgr.dockArea.dockManager().containerOverlay()
@@ -517,32 +521,35 @@ class CDockAreaTitleBar(QtWidgets.QFrame):
         _is_top_level_area = self._mgr.dockArea.isTopLevelArea()
         _menu = QtWidgets.QMenu(self)
         if not _is_top_level_area:
-            _action = _menu.addAction('detach' if _is_auto_hide else 'detach group',
-                                      self,
-                                      self.onUndockButtonClicked)
-            _action.setEnable(EnumDockWidgetFeature.FLOATABLE in self._mgr.dockArea.features())
+            _action = QtGui.QAction('detach' if _is_auto_hide else 'detach group', self)
+            _menu.addAction(_action)
+            _action.triggered.connect(self.onUndockButtonClicked)
+            _action.setEnabled(EnumDockWidgetFeature.FLOATABLE in self._mgr.dockArea.features())
+
             if EnumAutoHideFlag.AutoHideFeatureEnabled in AUTO_HIDE_DEFAULT_CONFIG:
-                _action = _menu.addAction('unpin (dock)' if _is_auto_hide else 'Pin group',
-                                          self,
-                                          self.onAutoHideDockAreaActionClicked)
+                _action = QtGui.QAction('unpin (dock)' if _is_auto_hide else 'Pin group', self)
+                _menu.addAction(_action)
+                _action.triggered.connect(self.onAutoHideDockAreaActionClicked)
                 _area_is_pinnable = EnumDockWidgetFeature.PINNABLE in self._mgr.dockArea.features()
-                _action.setEnable(_area_is_pinnable)
+                _action.setEnabled(_area_is_pinnable)
+
                 if not _is_auto_hide:
-                    _smenu = _menu.addMenu('Pin Group To...')
-                    _smenu.setEnabled(_area_is_pinnable)
-                    self._mgr.createAutoHideToAction('top', EnumSideBarLocation.TOP, _smenu)
-                    self._mgr.createAutoHideToAction('Left', EnumSideBarLocation.LEFT, _smenu)
-                    self._mgr.createAutoHideToAction('Right', EnumSideBarLocation.RIGHT, _smenu)
-                    self._mgr.createAutoHideToAction('Bottom', EnumSideBarLocation.BOTTOM, _smenu)
+                    _s_menu = _menu.addMenu('Pin Group To...')
+                    _s_menu.setEnabled(_area_is_pinnable)
+                    self._mgr.createAutoHideToAction('top', EnumSideBarLocation.TOP, _s_menu)
+                    self._mgr.createAutoHideToAction('Left', EnumSideBarLocation.LEFT, _s_menu)
+                    self._mgr.createAutoHideToAction('Right', EnumSideBarLocation.RIGHT, _s_menu)
+                    self._mgr.createAutoHideToAction('Bottom', EnumSideBarLocation.BOTTOM, _s_menu)
             _menu.addSeparator()
-        _action = _menu.addAction('close' if _is_auto_hide else 'close group',
-                                  self,
-                                  self.onCloseButtonClicked)
-        _action.setEnable(EnumDockWidgetFeature.CLOSEABLE in self._mgr.dockArea.features())
+        _action = QtGui.QAction('close' if _is_auto_hide else 'close group', self)
+        _menu.addAction(_action)
+        _action.triggered.connect(self.onCloseButtonClicked)
+        _action.setEnabled(EnumDockWidgetFeature.CLOSEABLE in self._mgr.dockArea.features())
+
         if not _is_auto_hide and not _is_top_level_area:
-            _action = _menu.addAction('close other groups',
-                                      self._mgr.dockArea,
-                                      self._mgr.dockArea.closeOtherAreas)
+            _action = QtGui.QAction('close other groups', self._mgr.dockArea)
+            _menu.addAction(_action)
+            _action.triggered.connect(self._mgr.dockArea.closeOtherAreas)
 
         _menu.exec(event.globalPos())
 

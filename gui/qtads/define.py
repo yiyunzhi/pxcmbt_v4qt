@@ -65,12 +65,15 @@ class EnumBitwiseOP(enum.Enum):
     OR = enum.auto()
 
 
-class EnumSideBarLocation(enum.Enum):
-    TOP = enum.auto()
-    LEFT = enum.auto()
-    RIGHT = enum.auto()
-    BOTTOM = enum.auto()
-    NONE = enum.auto()
+# todo: use above segement
+# class EnumSideBarLocation(enum.Enum):
+#     TOP = enum.auto()
+#     LEFT = enum.auto()
+#     RIGHT = enum.auto()
+#     BOTTOM = enum.auto()
+#     NONE = enum.auto()
+EnumSideBarLocation = enum.Enum('EnumSideBarLocation',
+                                ['TOP', 'LEFT', 'RIGHT', 'BOTTOM', 'NONE'], start=0)
 
 
 class EnumInsertionOrder(enum.Enum):
@@ -298,7 +301,7 @@ class EnumDropMode(enum.Enum):
     DropModeInvalid = enum.auto()  # invalid mode - do not drop
 
 
-class EnuStateFileVersion(enum.IntEnum):
+class EnumStateFileVersion(enum.IntEnum):
     InitialVersion = 0  # InitialVersion
     Version1 = 1  # Version1
     CurrentVersion = Version1  # CurrentVersion
@@ -310,5 +313,8 @@ class EnumRepolishChildOptions(enum.Enum):
     RepolishChildrenRecursively = enum.auto()
 
 
-DOCK_MANAGER_DEFAULT_CONFIG = EnumDockMgrConfigFlag.DefaultNonOpaqueConfig
+# DOCK_MANAGER_DEFAULT_CONFIG = EnumDockMgrConfigFlag.DefaultNonOpaqueConfig | EnumDockMgrConfigFlag.FocusHighlighting
+DOCK_MANAGER_DEFAULT_CONFIG = EnumDockMgrConfigFlag.DefaultNonOpaqueConfig \
+                              | EnumDockMgrConfigFlag.FocusHighlighting \
+                              | EnumDockMgrConfigFlag.HideSingleCentralWidgetTitleBar
 AUTO_HIDE_DEFAULT_CONFIG = EnumAutoHideFlag.DefaultAutoHideConfig

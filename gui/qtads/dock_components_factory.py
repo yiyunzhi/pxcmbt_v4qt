@@ -17,7 +17,7 @@ class _CDockComponentsFactoryMgr:
         return CDockWidgetTab(dock_widget, parent=parent)
 
     @staticmethod
-    def createDockWidgetSideTab(dock_widget: 'CDockWidget'):
+    def createDockWidgetSideTab(dock_widget: 'CDockWidget' = None):
         return CAutoHideTab(dock_widget)
 
     @staticmethod
