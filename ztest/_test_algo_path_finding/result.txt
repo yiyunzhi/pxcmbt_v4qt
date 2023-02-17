@@ -1,0 +1,2 @@
+bidirection A* with manhattan is better for using
+for orhogonal purpose use _test_algo_oth_r_qt.py

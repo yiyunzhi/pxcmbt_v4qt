@@ -1,0 +1,5 @@
+de:
+  empty_f: '{} darf nicht leer sein.'
+  exist_f: '{} Datei ist bereit exisitiert.'
+  not_exist_f: '{} Datei ist nicht exisitiert.'
+  unknown_format_f: '{} ist eine unbekannte Format.'

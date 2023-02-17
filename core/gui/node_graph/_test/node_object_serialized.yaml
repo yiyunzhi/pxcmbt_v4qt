@@ -1,0 +1,34 @@
+!NodeObject
+model: !NodeModel
+  label: node
+  color: !!python/tuple
+  - 13
+  - 18
+  - 23
+  - 255
+  borderColor: !!python/tuple
+  - 74
+  - 84
+  - 85
+  - 255
+  textColor: !!python/tuple
+  - 255
+  - 255
+  - 255
+  - 180
+  selected: false
+  disabled: false
+  visible: true
+  width: 100.0
+  height: 80.0
+  pos:
+  - 0.0
+  - 0.0
+  layoutDirection: 0
+  custom: {}
+  inputs: {}
+  outputs: {}
+  input_ports: []
+  output_ports: []
+  subgraph_session: {}
+view_cls_name: TestView

@@ -1,0 +1,14 @@
+en:
+  welcome: welcome
+  model: model
+  blocks: blocks
+  blocks1: blocks1
+  blocks2: blocks2
+  help: help
+  error: Error
+  warning: Warning
+  success: Success
+  project_name: ProjectName
+  project_path: ProjectPath
+  project_open: OpenProject
+  project_save: SaveProject

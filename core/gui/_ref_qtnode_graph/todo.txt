@@ -1,0 +1,11 @@
+# done: while pan chang the cursor
+# todo: anytree.NodeMixin für NodeGraph???
+# todo: add flag feature for nodeGraph like, custom handling for subgraph or default
+# todo: horizontal or vertical pipe the arrow is gone.
+# todo: groupNode double click should open sub view
+# todo: subGraphNav text chang not effect node
+# todo: add minimap
+# todo: add LayoutTree in graph??
+# todo: overlay node with color warn user
+# todo: Interaction processed in view move into ClassGuiMode/Interactor
+# todo: MAX Min ZoomFactor in Mode define, also the mouse event process

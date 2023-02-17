@@ -1,0 +1,5 @@
+en:
+  empty_f: '{} could not empty.'
+  exist_f: '{} file already exist.'
+  not_exist_f: '{} not exist.'
+  unknown_format_f: '{} is unknown format.'

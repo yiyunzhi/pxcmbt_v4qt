@@ -1,0 +1,306 @@
+# https://doc.qt.io/qt-5/qkeysequence.html#standard-shortcuts
+#the shortcut expression define:
+#  starts with ! : use the standard,
+#  starts with > : the keyname sequence
+
+
+label: _root
+children:
+  - label: file
+    uid: 100
+    oid: 0
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    shortcut:
+    handle:
+    children:
+      - label: new_project
+        uid: 101
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.file-add-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!New'
+        handle:
+      - label: open_project
+        uid: 102
+        oid: 1
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.folder-open-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!Open'
+        handle:
+      - label: '-'
+        oid: 2
+      - label: save_project
+        uid: 103
+        oid: 3
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.save-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!Save'
+        handle:
+      - label: save_project_as
+        uid: 104
+        oid: 4
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.save-3-line
+        checkable: false
+        initCheckState: false
+        shortcut:
+        handle:
+      - label: '-'
+        oid: 5
+      - label: exit
+        uid: 105
+        oid: 6
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.logout-box-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!Close'
+        handle:
+  - label: edit
+    uid: 200
+    oid: 1
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    shortcut:
+    handle:
+    children:
+      - label: undo
+        uid: 201
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.arrow-go-back-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!Undo'
+        handle:
+      - label: redo
+        uid: 202
+        oid: 1
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.arrow-go-forward-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!Redo'
+        handle:
+      - label: '-'
+        oid: 2
+      - label: cut
+        uid: 203
+        oid: 3
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.scissors-cut-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!Cut'
+        handle:
+      - label: copy
+        uid: 204
+        oid: 4
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.file-copy-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!Copy'
+        handle:
+      - label: paste
+        uid: 205
+        oid: 5
+        i18nNs: mb
+        iconNs: fa
+        iconName: ph.clipboard
+        checkable: false
+        initCheckState: false
+        shortcut: '!Paste'
+        handle:
+      - label: remove
+        uid: 206
+        oid: 6
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.delete-bin-2-line
+        checkable: false
+        initCheckState: false
+        shortcut:
+        handle:
+      - label: delete
+        uid: 207
+        oid: 7
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.file-shred-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!Delete'
+        handle:
+  - label: view
+    uid: 300
+    oid: 2
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    shortcut:
+    handle:
+    children:
+      - label: window
+        uid: 301
+        oid: 0
+        asContainer: true
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.window-line
+        checkable: false
+        initCheckState: false
+        shortcut:
+        handle:
+  - label: tool
+    uid: 400
+    oid: 2
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    shortcut:
+    handle:
+    children:
+      - label: external
+        uid: 401
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.external-link-line
+        checkable: false
+        initCheckState: false
+        shortcut:
+        handle:
+        children:
+          - label: calculator
+            uid: 402
+            oid: 0
+            i18nNs: mb
+            iconNs: fa
+            iconName: ri.calculator-line
+            checkable: false
+            initCheckState: false
+            shortcut:
+            handle:
+          - label: text_editor
+            uid: 403
+            oid: 1
+            i18nNs: mb
+            iconNs: fa
+            iconName: ri.file-text-line
+            checkable: false
+            initCheckState: false
+            shortcut:
+            handle:
+          - label: screen_shoot
+            uid: 404
+            oid: 1
+            i18nNs: mb
+            iconNs: fa
+            iconName: ri.crop-line
+            checkable: false
+            initCheckState: false
+            shortcut:
+            handle:
+      - label: '-'
+        oid: 1
+      - label: option
+        uid: 410
+        oid: 2
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.settings-line
+        checkable: false
+        initCheckState: false
+        shortcut:
+        handle:
+  - label: windows
+    uid: 500
+    oid: 3
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    shortcut:
+    handle:
+    children:
+      - label: save_perspective
+        uid: 501
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.layout-4-line
+        checkable: false
+        initCheckState: false
+        shortcut:
+        handle:
+      - label: load_perspective
+        uid: 502
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.layout-masonry-line
+        checkable: false
+        initCheckState: false
+        shortcut:
+        handle:
+  - label: help
+    uid: 600
+    oid: 4
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    shortcut:
+    handle:
+    children:
+      - label: help
+        uid: 601
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.file-list-line
+        checkable: false
+        initCheckState: false
+        shortcut: '!HelpContents'
+        handle:
+      - label: '-'
+        oid: 1
+      - label: about
+        uid: 610
+        oid: 2
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.information-line
+        checkable: false
+        initCheckState: false
+        shortcut:
+        handle:

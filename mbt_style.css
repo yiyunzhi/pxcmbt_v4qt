@@ -1,11 +1,16 @@
 /***app***/
+QMenu::icon{ /* appearance of a 'checked' icon */
+    margin-left:8px;
+}
+
+
 #modeSelToolBar {
     min-width: 48px;
 }
 #modeSelToolBar QToolButton{
     color:{{colors.primaryTextColor}};
     min-width:32px;
-    min-height:36px;
+    min-height:32px;
     margin-right:6px;
 }
 #modeSelToolBar QToolButton::menu-indicator {

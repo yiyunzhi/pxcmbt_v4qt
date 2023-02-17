@@ -39,5 +39,13 @@ todo: ->doing: selector: welcome,model,blocks,requirements(in docu group or test
 done: improve QTADS while darktheme setup
 done: left put a mode select sidebar, default only centraldockarea
 done: mode selector in group, every action from same group will in tabWidget grouped.
-
-
+todo: help doc: https://doc.qt.io/qtforpython/overviews/qthelp-framework.html
+todo: toggle toolbar https://doc.qt.io/qtforpython/PySide6/QtWidgets/QToolBar.html?highlight=toggleviewaction#PySide6.QtWidgets.PySide6.QtWidgets.QToolBar.toggleViewAction
+        https://stackoverflow.com/questions/25277060/how-do-you-hide-restore-a-toolbar-when-switching-from-to-a-page-of-a-qstackedwid
+done: STC Editor https://gist.github.com/Axel-Erfurt/8c84b5e70a1faf894879cd2ab99118c2
+todo: event in a host during the design phase is only an interface, if events host add to the model, then could bind event with the events from other model emitted.
+        in solution do a declaration of an event.
+todo: has builtin fn solution: sendEvent
+todo: IPODEntity muss have RT,IPOD
+todo: model only accepted IPODEntity while DND
+todo: tester only accepted IPODEntityModel while DND, create Test[Testrun,ReqLink]->drop IPODEntityModel->setting etc.constraint...->build testcase->run

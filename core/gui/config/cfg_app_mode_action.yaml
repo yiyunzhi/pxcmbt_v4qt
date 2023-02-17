@@ -1,0 +1,114 @@
+label: _root
+children:
+  - label: '[]'
+    children:
+      - label: welcome
+        oid: 0
+        uid: 1000
+        i18nNs: app
+        iconNs: fa
+        iconName: ri.dashboard-line
+        checkable: true
+        initCheckState: true
+        shortcut:
+        handle:
+        children: []
+        layoutModifiers:
+          - uid: app.welcome
+            module: gui.editor.welcome.pane_welcome
+            class: WelcomeDockPane
+            target: centerWidget
+            policy: replace
+
+      - label: model
+        oid: 1
+        uid: 1010
+        i18nNs: app
+        iconNs: fa
+        iconName: mdi6.cube
+        checkable: true
+        initCheckState: false
+        shortcut:
+        handle:
+        children: []
+        layoutModifiers:
+          - uid: app.model
+            module: gui.editor.model.pane_model_project_tree_view
+            class: ModelProjectTreeViewContentDockPane
+            target: projectTreeView
+            policy: replace
+      - label: blocks
+        oid: 2
+        uid: 1020
+        i18nNs: app
+        iconNs: fa
+        iconName: ph.puzzle-piece
+        checkable: true
+        initCheckState: false
+        shortcut:
+        handle:
+        children: []
+        layoutModifiers:
+          - uid: app.blocks
+            module: gui.editor.blocks.pane_blocks_project_tree_view
+            class: BlocksProjectTreeViewContentDockPane
+            target: projectTreeView
+            policy: replace
+
+      - label: environment
+        oid: 3
+        uid: 1030
+        i18nNs: app
+        iconNs: fa
+        iconName: ri.settings-6-line
+        checkable: true
+        initCheckState: false
+        shortcut:
+        handle:
+        children: []
+        layoutModifiers:
+          - uid: app.environment
+            module: gui.editor.env.pane_env_project_tree_view
+            class: EnvProjectTreeViewContentDockPane
+            target: projectTreeView
+            policy: replace
+      - label: tester
+        oid: 4
+        uid: 1040
+        i18nNs: app
+        iconNs: fa
+        iconName: ri.restart-fill
+        checkable: true
+        initCheckState: false
+        shortcut:
+        handle:
+        children: []
+        layoutModifiers:
+          - uid: app.blocks
+            module: gui.editor.tester.pane_tester_project_tree_view
+            class: TesterProjectTreeViewContentDockPane
+            target: projectTreeView
+            policy: append
+  - label: '='
+    # a spacer()
+    oid: 5
+  - label: '-'
+    # a separator
+    oid: 6
+  - label: help
+    oid: 7
+    uid: 1050
+    i18nNs: app
+    iconNs: fa
+    iconName: mdi6.help-box
+    checkable: false
+    initCheckState: false
+    shortcut:
+    handle:
+    children: []
+    layoutModifiers:
+      - uid: app.help
+        module: gui.editor.env.pane_env_project_tree_view
+        class: EnvProjectTreeViewContentPane
+        target: floatRight
+        policy: append
