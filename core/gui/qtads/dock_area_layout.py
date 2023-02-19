@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 logger = logging.getLogger(__name__)
 

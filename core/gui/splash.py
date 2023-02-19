@@ -19,8 +19,8 @@
 #
 #
 # ------------------------------------------------------------------------------
-from PySide6 import QtCore, QtWidgets, QtGui
-from application.define import APP_NAME, APP_VERSION
+from core.gui.qtimp import QtCore, QtWidgets, QtGui
+from core.application.define import APP_NAME, APP_VERSION
 from .core.define_path import SPLASH_BG_IMAGE_PATH
 
 

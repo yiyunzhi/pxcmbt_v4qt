@@ -1,4 +1,4 @@
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 
 class ElidingLabelMgr:

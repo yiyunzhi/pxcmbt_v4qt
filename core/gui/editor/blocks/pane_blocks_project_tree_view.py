@@ -20,10 +20,10 @@
 #
 # ------------------------------------------------------------------------------
 from pubsub import pub
-from application.core.base import singleton
-from gui import QtGui, QtWidgets, QtCore
-from gui.core.class_base import ThemeStyledUiObject, I18nUiObject
-import gui.qtads as QtAds
+from core.application.core.base import singleton
+from core.gui.qtimp import QtGui, QtWidgets, QtCore
+from core.gui.core.class_base import ThemeStyledUiObject, I18nUiObject
+import core.gui.qtads as QtAds
 
 
 class _BlocksProjectTreeViewContentPane(QtWidgets.QWidget):

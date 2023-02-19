@@ -21,10 +21,10 @@ import os.path
 #
 # ------------------------------------------------------------------------------
 from pubsub import pub
-from application.define_path import PROJECT_PATH
-from gui import QtWidgets, QtCore
-from gui.core.class_base import ThemeStyledUiObject, I18nUiObject
-from gui.components.widget_file_browser import FileBrowserWidget
+from core.application.define_path import PROJECT_PATH
+from core.gui.qtimp import QtWidgets, QtCore
+from core.gui.core.class_base import ThemeStyledUiObject, I18nUiObject
+from core.gui.components.widget_file_browser import FileBrowserWidget
 from core.gui.components.widget_header import HeaderWidget
 
 

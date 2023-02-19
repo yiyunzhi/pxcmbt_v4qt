@@ -24,7 +24,7 @@ from attrdict import AttrDict
 
 class MBTSolution:
     """
-    solutionDef expect:
+    solutionDef expect a dict likes:
         'icon': None,
         'namespace': 'StateChart',
         'type': 'stc',

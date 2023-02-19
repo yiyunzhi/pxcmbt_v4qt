@@ -22,12 +22,12 @@
 import sys
 import traceback
 import logging
-from PySide6 import QtCore, QtWidgets
+from ..qtimp import QtCore, QtWidgets
 
 # basic logger functionality
-log = logging.getLogger(__name__)
-handler = logging.StreamHandler(stream=sys.stdout)
-log.addHandler(handler)
+_logger = logging.getLogger(__name__)
+_handler = logging.StreamHandler(stream=sys.stdout)
+_logger.addHandler(_handler)
 
 
 def show_exception_box(log_msg):
@@ -35,11 +35,11 @@ def show_exception_box(log_msg):
     If unavailable (non-console application), log an additional notice.
     """
     if QtWidgets.QApplication.instance() is not None:
-        errorbox = QtWidgets.QMessageBox()
-        errorbox.setText("Oops. An unexpected error occured:\n{0}".format(log_msg))
-        errorbox.exec_()
+        _errorbox = QtWidgets.QMessageBox()
+        _errorbox.setText("Oops. An unexpected error occured:\n{0}".format(log_msg))
+        _errorbox.exec_()
     else:
-        log.debug("No QApplication instance available.")
+        _logger.debug("No QApplication instance available.")
 
 
 class UncaughtHook(QtCore.QObject):
@@ -62,12 +62,12 @@ class UncaughtHook(QtCore.QObject):
             # ignore keyboard interrupt to support console applications
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
         else:
-            exc_info = (exc_type, exc_value, exc_traceback)
-            log_msg = '\n'.join([''.join(traceback.format_tb(exc_traceback)),
+            _exc_info = (exc_type, exc_value, exc_traceback)
+            _log_msg = '\n'.join([''.join(traceback.format_tb(exc_traceback)),
                                  '{0}: {1}'.format(exc_type.__name__, exc_value)])
-            log.critical("Uncaught exception:\n {0}".format(log_msg), exc_info=exc_info)
+            _logger.critical("Uncaught exception:\n {0}".format(_log_msg), exc_info=_exc_info)
 
             # trigger message box show
-            self._exception_caught.emit(log_msg)
+            self._exception_caught.emit(_log_msg)
 
 

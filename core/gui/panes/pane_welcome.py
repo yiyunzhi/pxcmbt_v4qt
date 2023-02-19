@@ -20,10 +20,10 @@
 #
 # ------------------------------------------------------------------------------
 from pubsub import pub
-from application.core.base import singleton
-from gui import QtWidgets, QtCore
-import gui.qtads as QtAds
-from gui.core.class_base import ThemeStyledUiObject, I18nUiObject
+from core.application.core.base import singleton
+from core.gui.qtimp import QtWidgets, QtCore
+import core.gui.qtads as QtAds
+from core.gui.core.class_base import ThemeStyledUiObject, I18nUiObject
 from core.gui.components.widget_recent_file_list import RecentFileListWidget
 
 
@@ -33,7 +33,6 @@ class _WelcomePane(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
             text-transform: uppercase;
             font-size: 16px;
             font-weight: bolder;
-            margin-bottom: 12px;
             border-bottom: 1px solid palette(windowtext);
             border-radius:0px;
         }

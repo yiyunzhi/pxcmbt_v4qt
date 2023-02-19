@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import math
 
-from gui import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from ..core.define import Z_VAL_NODE_WIDGET
 

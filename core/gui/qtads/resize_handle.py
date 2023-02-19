@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from PySide6 import QtCore, QtWidgets, QtGui
+from core.gui.qtimp import QtCore, QtWidgets, QtGui
 
 
 class ResizeHandlerMgr:

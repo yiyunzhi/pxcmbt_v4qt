@@ -1,6 +1,6 @@
 import sys
-from gui import QtGui, QtCore, QtWidgets
-from gui.core.class_base import ThemeStyledUiObject,I18nUiObject
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
+from core.gui.core.class_base import ThemeStyledUiObject,I18nUiObject
 
 _customEvt=QtCore.QEvent.registerEventType()
 class TestPane(QtWidgets.QWidget):

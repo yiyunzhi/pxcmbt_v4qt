@@ -22,13 +22,13 @@
 import math
 import time
 
-from application.module.pathplanner.bi_dir_astar import (GridMap,
+from core.application.module.pathplanner.bi_dir_astar import (GridMap,
                                                          BidirectionalAStar,
                                                          render_path,
                                                          get_theta_angle,
                                                          get_direction_change,
                                                          PointLike)
-from gui import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 
 GRID = 10
 ZOOM_MIN = 0.1

@@ -1,5 +1,5 @@
 import logging, typing
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 from .define import (EnumSideBarLocation,
                      EnumDockWidgetArea,
                      DOCK_MANAGER_DEFAULT_CONFIG,

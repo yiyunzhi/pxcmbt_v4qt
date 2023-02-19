@@ -208,7 +208,7 @@ def curved_pipe(graph):
     """
     Set node graph pipes layout as curved.
     """
-    from gui._ref_qtnode_graph.core.define import EnumPipeShape
+    from core.gui._ref_qtnode_graph.core.define import EnumPipeShape
     graph.set_pipe_style(EnumPipeShape.CURVED.value)
 
 
@@ -216,7 +216,7 @@ def straight_pipe(graph):
     """
     Set node graph pipes layout as straight.
     """
-    from gui._ref_qtnode_graph.core.define import EnumPipeShape
+    from core.gui._ref_qtnode_graph.core.define import EnumPipeShape
     graph.set_pipe_style(EnumPipeShape.STRAIGHT.value)
 
 
@@ -224,7 +224,7 @@ def angle_pipe(graph):
     """
     Set node graph pipes layout as angled.
     """
-    from gui._ref_qtnode_graph.core.define import EnumPipeShape
+    from core.gui._ref_qtnode_graph.core.define import EnumPipeShape
     graph.set_pipe_style(EnumPipeShape.ANGLE.value)
 
 
@@ -232,7 +232,7 @@ def bg_grid_none(graph):
     """
     Turn off the background patterns.
     """
-    from gui._ref_qtnode_graph.core.define import EnumViewFeature
+    from core.gui._ref_qtnode_graph.core.define import EnumViewFeature
     graph.set_grid_mode(EnumViewFeature.GRID_DISPLAY_NONE.value)
 
 
@@ -240,7 +240,7 @@ def bg_grid_dots(graph):
     """
     Set background node graph background with grid dots.
     """
-    from gui._ref_qtnode_graph.core.define import EnumViewFeature
+    from core.gui._ref_qtnode_graph.core.define import EnumViewFeature
     graph.set_grid_mode(EnumViewFeature.GRID_DISPLAY_DOTS.value)
 
 
@@ -248,7 +248,7 @@ def bg_grid_lines(graph):
     """
     Set background node graph background with grid lines.
     """
-    from gui._ref_qtnode_graph.core.define import EnumViewFeature
+    from core.gui._ref_qtnode_graph.core.define import EnumViewFeature
     graph.set_grid_mode(EnumViewFeature.GRID_DISPLAY_LINES.value)
 
 

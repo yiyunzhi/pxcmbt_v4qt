@@ -3,7 +3,7 @@ import pathlib
 import typing
 
 from typing import TYPE_CHECKING, Dict, List
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from .define import (EnumInsertionOrder,
                      EnumDockFlags,

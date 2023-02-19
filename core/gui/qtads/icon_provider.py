@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from PySide6 import QtCore, QtGui
+from core.gui.qtimp import QtCore, QtGui
 from .define import EnumADSIcon
 
 class IconProviderMgr:

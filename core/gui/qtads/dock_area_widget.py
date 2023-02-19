@@ -1,6 +1,6 @@
 import logging
 from typing import TYPE_CHECKING, Optional
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from .dock_components_factory import DEFAULT_COMPONENT_FACTORY
 

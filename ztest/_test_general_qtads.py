@@ -2,10 +2,10 @@ import sys, logging
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QLabel, QApplication, QMainWindow, QWidget, QVBoxLayout, QListWidget, QPlainTextEdit
 from PySide6 import QtCore
-from gui.qtads.dock_manager import CDockManager
-from gui.qtads.dock_widget import CDockWidget
-from gui.qtads.define import EnumDockWidgetArea
-from gui.qtads import CDockAreaWidget
+from core.gui.qtads.dock_manager import CDockManager
+from core.gui.qtads.dock_widget import CDockWidget
+from core.gui.qtads.define import EnumDockWidgetArea
+from core.gui.qtads import CDockAreaWidget
 
 logging.basicConfig(
     level=logging.DEBUG,

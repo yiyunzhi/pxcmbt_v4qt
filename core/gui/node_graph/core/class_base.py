@@ -19,9 +19,6 @@
 #
 #
 # ------------------------------------------------------------------------------
-import typing
-from gui.node_graph.core.define import EnumNodePropWidgetType
-
 
 class PropertyDef:
 

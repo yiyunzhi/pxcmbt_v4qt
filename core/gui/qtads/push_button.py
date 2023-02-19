@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import enum
-from PySide6 import QtWidgets, QtCore, QtGui
+from core.gui.qtimp import QtWidgets, QtCore, QtGui
 
 
 class EnumButtonOrientation(enum.IntEnum):

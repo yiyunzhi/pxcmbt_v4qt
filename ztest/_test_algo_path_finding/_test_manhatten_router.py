@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 from bisect import bisect
-from gui import QtCore
+from core.gui.qtimp import QtCore
 import core.gui.module.path_router.util as util
 from core.gui.module.path_router import ObstacleMap
 

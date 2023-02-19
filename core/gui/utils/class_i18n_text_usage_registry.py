@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import weakref
 import i18n
-from gui import QtGui
+from core.gui.qtimp import QtGui
 
 
 class I18nTextUsageRegistryItem:

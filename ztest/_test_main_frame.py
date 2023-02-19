@@ -21,9 +21,9 @@
 # ------------------------------------------------------------------------------
 import i18n, os
 from pubsub import pub
-from gui import QtCore, QtWidgets
-from gui.qttheme import apply_theme
-from application.define_path import I18N_PATH
+from core.gui.qtimp import QtCore, QtWidgets
+from core.gui.qttheme import apply_theme
+from core.application.define_path import I18N_PATH
 
 i18n.load_path.append(I18N_PATH)
 

@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import anytree
-from application.utils_helper import util_get_uuid_string
+from core.application.utils_helper import util_get_uuid_string
 
 TreeNodeMixin = anytree.NodeMixin
 

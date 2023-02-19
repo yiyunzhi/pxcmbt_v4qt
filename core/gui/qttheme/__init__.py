@@ -61,7 +61,7 @@ def set_icons_theme(theme_var_map: dict, cache_path='theme'):
     _resources_g.generate()
     QtCore.QDir.addSearchPath('icon', _resources_g.index)
     QtCore.QDir.addSearchPath('theme', RESOURCES_BASE_PATH)
-    QtCore.QDir.addSearchPath('icons', os.path.join(RESOURCES_BASE_PATH,'icons'))
+    QtCore.QDir.addSearchPath('icons', os.path.join(RESOURCES_BASE_PATH, 'icons'))
 
 
 # ----------------------------------------------------------------------
@@ -196,7 +196,7 @@ def apply_theme(app: QtWidgets.QApplication,
 
     _theme_context = get_theme_context(theme)
     if update_palette:
-        _palette=do_update_palette(_theme_context)
+        _palette = do_update_palette(_theme_context)
         app.setPalette(_palette)
     if not option:
         option = DEFAULT_STYLESHEET_OPTION
@@ -212,3 +212,4 @@ def apply_theme(app: QtWidgets.QApplication,
 
     set_icons_theme(_theme_context, cache_path=ICON_CACHE_PATH)
     app.setStyleSheet(_stylesheet)
+    return _theme_context

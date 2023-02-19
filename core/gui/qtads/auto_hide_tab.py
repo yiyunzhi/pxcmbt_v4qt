@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 from typing import TYPE_CHECKING
-from PySide6 import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 from .push_button import CPushButton, EnumButtonOrientation
 from .define import (EnumSideBarLocation, EnumAutoHideFlag, AUTO_HIDE_DEFAULT_CONFIG)
 from .util import repolishStyle, EnumRepolishChildOptions

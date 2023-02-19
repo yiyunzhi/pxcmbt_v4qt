@@ -20,8 +20,8 @@
 #
 # ------------------------------------------------------------------------------
 import weakref
-from gui import QtGui
-import gui.qtawesome as qta
+from core.gui.qtimp import QtGui
+import core.gui.qtawesome as qta
 
 
 class IconUsageRegistryItem:
@@ -53,6 +53,7 @@ class IconUsageRegistry:
         _force = kwargs.get('force', False)
         if _force:
             item.clear_cache()
+            _cached=None
         if _cached is None:
             if item.iconNs == 'fa':
                 _icon = qta.icon(item.iconName, **kwargs)

@@ -22,8 +22,8 @@ import types
 # ------------------------------------------------------------------------------
 from typing import Union, Any
 from core.application.class_tree import UUIDTreeNode
-from gui import QtCore, QtGui
-from gui.core.class_base import ThemeStyledUiObject
+from core.gui.qtimp import QtCore, QtGui
+from core.gui.core.class_base import ThemeStyledUiObject
 
 
 class ZQtTreeModelItem(UUIDTreeNode, ThemeStyledUiObject):

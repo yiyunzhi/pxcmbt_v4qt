@@ -21,4 +21,4 @@
 # ------------------------------------------------------------------------------
 from core.application.class_application_context import APP_CONTEXT
 
-print(APP_CONTEXT.mbt_solution_manager.solutions)
+print(APP_CONTEXT.mbt_solution_manager.solutions['StateChart.stc'].solution_def.editor)

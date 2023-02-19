@@ -20,7 +20,7 @@ import hashlib
 import os
 
 # Third party imports
-from gui import QtCore, QtWidgets, QtGui
+from core.gui.qtimp import QtCore, QtWidgets, QtGui
 
 # Local imports
 from ._version import __version__, version_info

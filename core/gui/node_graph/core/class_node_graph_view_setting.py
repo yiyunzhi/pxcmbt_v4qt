@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import Serializable
+from core.gui.qtimp import Serializable
 from .define import EnumPipeShapeStyle
 
 

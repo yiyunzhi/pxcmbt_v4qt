@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtCore, QtWidgets, QtGui
+from core.gui.qtimp import QtCore, QtWidgets, QtGui
 
 
 class BaseMenuWidget(QtWidgets.QMenu):

@@ -1,7 +1,7 @@
 import logging
 from typing import TYPE_CHECKING
 import math
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from ..define import EnumDragState
 from ..eliding_label import CElidingLabel

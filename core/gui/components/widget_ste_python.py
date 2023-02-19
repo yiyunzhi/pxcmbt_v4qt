@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import keyword
-from gui import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 from .widget_ste import STETextEdit, STENumberBar
 
 

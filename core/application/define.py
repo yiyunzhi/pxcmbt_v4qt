@@ -34,3 +34,4 @@ MB_ATTACH_LABEL_REGEX = r'^@(.*)@$'
 class EnumAppMsg:
     sigAppThemeChanged = 'sigAppThemeChanged'
     sigAppLanguageChanged = 'sigAppLanguageChanged'
+    sigAppBusyStateChangeRequired = 'sigAppBusyStateChangeRequired'

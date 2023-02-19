@@ -2,7 +2,7 @@ import sys, enum
 import functools
 
 from typing import Optional, Any, Union, Type, TYPE_CHECKING
-from PySide6 import QtGui, QtCore, QtWidgets, __version__ as QT_VERSION
+from core.gui.qtimp import QtGui, QtCore, QtWidgets, QTVersion
 
 from .define import EnumRepolishChildOptions,EnumADSIcon
 from .icon_provider import CIconProvider
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .dock_splitter import CDockSplitter
 DEBUG_LEVEL = 0
 PYQT5 = False
-QT_VERSION_TUPLE = tuple(int(i) for i in QT_VERSION.split('.')[:3])
+QT_VERSION_TUPLE = tuple(int(i) for i in QTVersion.split('.')[:3])
 
 LINUX = sys.platform.startswith('linux')
 WINDOWS = sys.platform == 'win32'

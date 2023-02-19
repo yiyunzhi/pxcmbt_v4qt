@@ -43,10 +43,10 @@ class HierarchyActionModel(anytree.NodeMixin):
         for x in _layoutModifiers:
             self.layoutModifiers.append(LayoutModifier(**x))
 
-    def getLabel(self):
+    def get_label(self):
         return '%s.%s' % (self.i18nNs, self.label)
 
-    def getIconInfo(self):
+    def get_icon_info(self):
         if self.iconNs is None or self.iconName is None:
             return None
         return self.iconNs, self.iconName

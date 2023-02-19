@@ -20,8 +20,8 @@
 #
 # ------------------------------------------------------------------------------
 from pubsub import pub
-from gui import QtWidgets
-from gui.core.class_base import I18nUiObject, ThemeStyledUiObject
+from core.gui.qtimp import QtWidgets
+from core.gui.core.class_base import I18nUiObject, ThemeStyledUiObject
 
 
 class FileBrowserWidget(QtWidgets.QWidget, I18nUiObject, ThemeStyledUiObject):

@@ -20,14 +20,13 @@
 #
 # ------------------------------------------------------------------------------
 import os, re, copy, json
-from application.core.base import Serializable
-from gui import QtGui, QtWidgets, QtCore, SerializableQObject
+from core.application.core.base import Serializable
+from core.gui.qtimp import QtGui, QtWidgets, QtCore, SerializableQObject, ClassFactory
 from .views.class_node_graph_view import NodeGraphView
 from .class_node_object import NodeObject
 from .core.define import (EnumLayoutDirection, URN_SCHEME, URI_SCHEME, EnumGraphViewFlag, EnumGraphFlag, EnumPipeShapeStyle)
-from . import ClassFactory
 from .core.class_menu import NodeGraphMenu, NodesMenu
-from gui.node_graph.views.class_node_graph_widget import NodeGraphWidget
+from .views.class_node_graph_widget import NodeGraphWidget
 from .core.class_node_graph_view_setting import NodeGraphViewSetting
 from .core.exceptions import *
 from .core.commands import (NodeViewAddedCmd,
@@ -1745,7 +1744,7 @@ class NodeGraph(QtCore.QObject, Serializable, metaclass=SerializableQObject):
         if not os.path.isfile(file_path):
             raise IOError('file does not exist: {}'.format(file_path))
         with open(file_path) as data_file:
-            _layout_data =yaml.load(data_file,Loader=yaml.CFullLoader)
+            _layout_data = yaml.load(data_file, Loader=yaml.CFullLoader)
             print(_layout_data)
         # try:
         #     from gui.node_graph.core.class_node_graph_view_setting import NodeGraphViewSetting

@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import logging, typing
-from PySide6 import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 from .floating_base import IFloatingWidget
 from .define import (EnumDragState, EnumDockWidgetFeature, EnumDockWidgetArea,
                      EnumDockMgrConfigFlag, DOCK_MANAGER_DEFAULT_CONFIG, EnumAutoHideFlag, AUTO_HIDE_DEFAULT_CONFIG)

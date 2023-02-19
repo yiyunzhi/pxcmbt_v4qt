@@ -15,7 +15,7 @@ children:
         children: []
         layoutModifiers:
           - uid: app.welcome
-            module: gui.editor.welcome.pane_welcome
+            module: core.gui.panes.pane_welcome
             class: WelcomeDockPane
             target: centerWidget
             policy: replace
@@ -33,7 +33,7 @@ children:
         children: []
         layoutModifiers:
           - uid: app.model
-            module: gui.editor.model.pane_model_project_tree_view
+            module: core.gui.editor.model.pane_model_project_tree_view
             class: ModelProjectTreeViewContentDockPane
             target: projectTreeView
             policy: replace
@@ -50,7 +50,7 @@ children:
         children: []
         layoutModifiers:
           - uid: app.blocks
-            module: gui.editor.blocks.pane_blocks_project_tree_view
+            module: core.gui.editor.blocks.pane_blocks_project_tree_view
             class: BlocksProjectTreeViewContentDockPane
             target: projectTreeView
             policy: replace
@@ -68,7 +68,7 @@ children:
         children: []
         layoutModifiers:
           - uid: app.environment
-            module: gui.editor.env.pane_env_project_tree_view
+            module: core.gui.editor.env.pane_env_project_tree_view
             class: EnvProjectTreeViewContentDockPane
             target: projectTreeView
             policy: replace
@@ -85,7 +85,7 @@ children:
         children: []
         layoutModifiers:
           - uid: app.blocks
-            module: gui.editor.tester.pane_tester_project_tree_view
+            module: core.gui.editor.tester.pane_tester_project_tree_view
             class: TesterProjectTreeViewContentDockPane
             target: projectTreeView
             policy: append
@@ -108,7 +108,7 @@ children:
     children: []
     layoutModifiers:
       - uid: app.help
-        module: gui.editor.env.pane_env_project_tree_view
+        module: core.gui.editor.env.pane_env_project_tree_view
         class: EnvProjectTreeViewContentPane
         target: floatRight
         policy: append

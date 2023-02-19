@@ -1,7 +1,7 @@
 import logging
 import typing
 from typing import TYPE_CHECKING, Callable
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 from .define import (EnumDockWidgetFeature, EnumDockMgrConfigFlag,
                      DOCK_MANAGER_DEFAULT_CONFIG, AUTO_HIDE_DEFAULT_CONFIG,
                      EnumAutoHideFlag,

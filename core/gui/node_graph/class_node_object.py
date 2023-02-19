@@ -19,9 +19,8 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import Serializable
+from core.gui.qtimp import Serializable,ClassFactory
 from .core.define import EnumLayoutDirection
-from . import ClassFactory
 
 
 class _ClassProperty:

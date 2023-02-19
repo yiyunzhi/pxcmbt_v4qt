@@ -22,7 +22,7 @@ import shutil
 import warnings
 
 # Third party imports
-from gui import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 # Linux packagers, please set this to True if you want to make qtawesome
 # use system fonts

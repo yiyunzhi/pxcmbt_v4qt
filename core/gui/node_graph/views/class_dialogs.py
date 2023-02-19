@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import os
-from gui import QtWidgets
+from core.gui.qtimp import QtWidgets
 
 _current_user_directory = os.path.expanduser('~')
 

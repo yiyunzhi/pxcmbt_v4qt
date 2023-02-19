@@ -19,12 +19,13 @@
 #
 #
 # ------------------------------------------------------------------------------
+from solutions.stc.gui.editor_stc import STCEditor
 
 SOLUTION_DEF = {
     'icon': None,
     'namespace': 'StateChart',
     'type': 'stc',
     'version': '1.0.1',
-    'editor': '',
+    'editor': STCEditor,
     'builtinEntitiesPath': '',
 }

@@ -31,8 +31,5 @@ class LayoutModifier:
         self.policy = kwargs.get('policy', None)
 
     def import_module(self):
-        try:
-            _module = importlib.import_module(self.module)
-            return getattr(_module, self.class_)
-        except Exception as e:
-            return None
+        _module = importlib.import_module(self.module)
+        return getattr(_module, self.class_)

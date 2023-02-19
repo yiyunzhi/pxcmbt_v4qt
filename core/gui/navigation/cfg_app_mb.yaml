@@ -208,6 +208,10 @@ children:
             initCheckState: false
             shortcut:
             handle:
+              method: '>os.start_program'
+              kwargs:
+                program: 'calc.exe'
+                arguments: []
           - label: text_editor
             uid: 403
             oid: 1
@@ -218,9 +222,13 @@ children:
             initCheckState: false
             shortcut:
             handle:
+              method: '>os.start_program'
+              kwargs:
+                program: 'notepad.exe'
+                arguments: []
           - label: screen_shoot
             uid: 404
-            oid: 1
+            oid: 2
             i18nNs: mb
             iconNs: fa
             iconName: ri.crop-line
@@ -228,6 +236,23 @@ children:
             initCheckState: false
             shortcut:
             handle:
+              method: '>os.start_program'
+              kwargs:
+                program: 'SnippingTool.exe'
+                arguments: []
+          - label: console
+            uid: 405
+            oid: 3
+            i18nNs: mb
+            iconNs: fa
+            iconName: ri.terminal-box-line
+            checkable: false
+            initCheckState: false
+            shortcut:
+            handle:
+              method: '>os.start_command'
+              kwargs:
+                command: 'start cmd.exe /K'
       - label: '-'
         oid: 1
       - label: option
@@ -287,7 +312,7 @@ children:
         oid: 0
         i18nNs: mb
         iconNs: fa
-        iconName: ri.file-list-line
+        iconName: mdi6.help-box
         checkable: false
         initCheckState: false
         shortcut: '!HelpContents'

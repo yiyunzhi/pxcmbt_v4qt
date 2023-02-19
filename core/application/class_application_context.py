@@ -33,10 +33,15 @@ class AppCtxInitException(Exception):
 @singleton
 class ApplicationContext:
     def __init__(self):
+        self.mainWin = None
         self._editorMapper = UidObjectMapper()
         self._app = None
+        self._appCss = None
+        self._appTheme = None
+        self.app_theme_context = None
         self._addonsManager = AddonsManager(self)
         self._solutionManager = MBTSolutionsManager(self)
+        self.paletteAppliedFlag = False
         self.setup()
 
     @property
@@ -46,6 +51,22 @@ class ApplicationContext:
     @app.setter
     def app(self, app_instance):
         self._app = app_instance
+
+    @property
+    def app_css(self):
+        return self._appCss
+
+    @app_css.setter
+    def app_css(self, app_css):
+        self._appCss = app_css
+
+    @property
+    def app_theme(self):
+        return self._appTheme
+
+    @app_theme.setter
+    def app_theme(self, app_theme_name):
+        self._appTheme = app_theme_name
 
     @property
     def addons_manager(self):
@@ -61,6 +82,10 @@ class ApplicationContext:
             self._solutionManager.resolve_solutions(SOLUTIONS_PATH)
         except Exception as e:
             raise AppCtxInitException('Application context init error.\n%s' % e)
+
+    def set_app_busy(self, busy=True):
+        if self.mainWin:
+            self.mainWin.set_busy(busy)
 
 
 APP_CONTEXT = ApplicationContext()

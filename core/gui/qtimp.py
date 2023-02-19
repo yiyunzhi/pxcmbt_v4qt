@@ -6,10 +6,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : _test_node_graph.py
+# Sourcefile(s) : qtimp.py
 # ------------------------------------------------------------------------------
 #
-# File          : _test_node_graph.py
+# File          : qtimp.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,12 +19,11 @@
 #
 #
 # ------------------------------------------------------------------------------
-import sys
-from gui import QtGui,QtCore,QtWidgets
-from gui.node_graph.class_node_graph import NodeGraph
+from PySide6 import QtCore, QtGui, QtWidgets,__version__ as QTVersion
 
-app=QtWidgets.QApplication(sys.argv)
-g=NodeGraph()
-v=g.p_view
-v.show()
-sys.exit(app.exec())
+from core.application.core.base import Serializable
+from core.application.core.class_factory import ClassFactory
+
+
+class SerializableQObject(type(QtCore.QObject), type(Serializable)):
+    pass

@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import typing, logging
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 from .define import EnumDockWidgetFeature
 from .util import LINUX, getQApp, repolishStyle, EnumRepolishChildOptions, findParent
 from .dock_widget_tab import CDockWidgetTab

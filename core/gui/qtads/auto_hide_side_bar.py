@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import logging, typing
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 from .define import (EnumSideBarLocation, EnumDockWidgetArea)
 from .util import findParent, findChild, findChildren
 from .auto_hide_tab import CAutoHideTab

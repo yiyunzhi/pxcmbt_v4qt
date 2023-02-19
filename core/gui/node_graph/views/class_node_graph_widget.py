@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtWidgets, QtGui
+from core.gui.qtimp import QtWidgets, QtGui
 from .class_node_nav_widget import NodeNavigationWidget
 
 

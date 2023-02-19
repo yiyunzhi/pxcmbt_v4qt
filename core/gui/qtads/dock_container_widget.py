@@ -1,7 +1,7 @@
 import logging
 import typing
 from typing import TYPE_CHECKING, List, Dict, Tuple, Optional
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from .util import (findParent, hideEmptyParentSplitters, getQApp, globalGeometry,
                    emitTopLevelEventForWidget, findChild, findChildren)

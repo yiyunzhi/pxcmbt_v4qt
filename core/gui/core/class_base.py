@@ -20,8 +20,8 @@
 #
 # ------------------------------------------------------------------------------
 from pubsub import pub
-from gui.utils.class_icon_usage_registry import IconUsageRegistry
-from gui.utils.class_i18n_text_usage_registry import I18nTextUsageRegistry
+from core.gui.utils.class_icon_usage_registry import IconUsageRegistry
+from core.gui.utils.class_i18n_text_usage_registry import I18nTextUsageRegistry
 
 
 class ThemeStyledUiObject:

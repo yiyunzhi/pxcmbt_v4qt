@@ -19,8 +19,3 @@
 #
 #
 # ------------------------------------------------------------------------------
-from application.class_application_context import APP_CONTEXT
-# from .model.pane_model_project_tree_view import ModelProjectTreeViewContentPane
-#
-#
-# APP_CONTEXT.editorMapper.set('model', ModelProjectTreeViewContentPane)

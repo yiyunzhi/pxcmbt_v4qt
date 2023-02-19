@@ -630,7 +630,7 @@ QMenu::item {
   {% if QMenu %}
     height: {{qmenu_height}}px;
   {% else %}
-    height: {{24|density(densityScale)}}px;
+    height: {{26|density(densityScale)}}px;
   {% endif %}
   border: 1px solid transparent;
   color: {{colors.secondaryTextColor}};
@@ -734,7 +734,7 @@ QMenuBar {
 }
 
 QMenuBar::item {
-  height: {{24|density(densityScale)}}px;
+  height: {{28|density(densityScale)}}px;
   padding: 4px 8px 4px 8px;
   background-color: transparent;
   color: {{colors.secondaryTextColor}};

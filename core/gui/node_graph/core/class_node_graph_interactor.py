@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import typing, math
-from gui import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 from ..views.class_base_node_view_item import BaseNodeViewItem
 from ..views.class_search_widget import SearchMenuWidget
 from ..views.class_pipe_view_item import LivePipeItem, PipeViewItem

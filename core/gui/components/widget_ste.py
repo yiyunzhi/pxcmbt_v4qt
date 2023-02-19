@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 
 lineBarColor = QtGui.QColor("#eeeeee")
 lineHighlightColor = QtGui.QColor("#fce94f")

@@ -81,7 +81,7 @@ class MainWinC(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.tableWidget_2.set_row_height(r, 36)
 
 
-from gui.qttheme import apply_theme
+from core.gui.qttheme import apply_theme
 
 theme = 'default'
 
@@ -92,7 +92,7 @@ def take_screenshot():
     print(f'Saving {theme}')
 
 
-from gui.patch.low_level_sys_ui import llSetDarkWinTitlebar
+from core.gui.patch.low_level_sys_ui import llSetDarkWinTitlebar
 
 app = QtWidgets.QApplication(sys.argv)
 frame = MainWinC()

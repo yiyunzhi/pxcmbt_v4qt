@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 from typing import Optional
 from collections import OrderedDict
-from gui import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 from ..core.define import ICON_NODE_BASE,EnumLayoutDirection,ITEM_CACHE_MODE
 from .class_base_node_view_item import BaseNodeViewItem
 from .class_text_item import NodeTextItem

@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtWidgets, QtCore, QtGui
+from core.gui.qtimp import QtWidgets, QtCore, QtGui
 
 
 class NodeTextItem(QtWidgets.QGraphicsTextItem):

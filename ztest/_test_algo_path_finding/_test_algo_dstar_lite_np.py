@@ -23,7 +23,7 @@ from sys import maxsize
 from functools import wraps
 import math
 import numpy as np
-from application.module.dstar_lite_pathplanner import OccupancyGridMap, DStarLite
+from core.application.module.dstar_lite_pathplanner import OccupancyGridMap, DStarLite
 
 
 def time_logger(func):

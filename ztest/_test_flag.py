@@ -19,8 +19,8 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui.qtads.util import testFlag
-from gui.qtads.define import EnumDockMgrConfigFlag,DOCK_MANAGER_DEFAULT_CONFIG,EnumSideBarLocation
+from core.gui.qtads.util import testFlag
+from core.gui.qtads.define import EnumDockMgrConfigFlag,DOCK_MANAGER_DEFAULT_CONFIG,EnumSideBarLocation
 
 
 print(testFlag(DOCK_MANAGER_DEFAULT_CONFIG,EnumDockMgrConfigFlag.DockAreaHasCloseButton))

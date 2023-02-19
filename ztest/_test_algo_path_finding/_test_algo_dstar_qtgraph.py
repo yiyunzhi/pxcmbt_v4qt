@@ -21,7 +21,7 @@ import sys
 #
 # ------------------------------------------------------------------------------
 import math
-from gui import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 from ztest._test_algo_dstar_np import Map, DStar, Cell
 
 

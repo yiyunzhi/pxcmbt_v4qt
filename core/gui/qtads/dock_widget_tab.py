@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, no_type_check
 import logging
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from .floating_drag_preview import CFloatingDragPreview
 from .util import (startDragDistance, setButtonIcon,

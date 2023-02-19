@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import i18n, os
 from pubsub import pub
-from gui import QtCore, QtWidgets
+from core.gui.qtimp import QtCore, QtWidgets
 app = QtWidgets.QApplication()
 
 class TestFrame(QtWidgets.QMainWindow):

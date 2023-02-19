@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import sys
-from gui import QtWidgets
+from core.gui.qtimp import QtWidgets
 from core.gui.components.widget_ste_python import PythonSTE
 
 app = QtWidgets.QApplication(sys.argv)

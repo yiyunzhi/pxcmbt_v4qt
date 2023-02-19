@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from PySide6 import QtCore, QtWidgets
+from core.gui.qtimp import QtCore, QtWidgets
 from .define import EnumDragState
 
 

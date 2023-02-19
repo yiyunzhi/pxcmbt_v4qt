@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 import logging
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from .define import (EnumDockWidgetFeature, EnumDragState, EnumDockWidgetArea,
                      DOCK_MANAGER_DEFAULT_CONFIG, EnumDockMgrConfigFlag)

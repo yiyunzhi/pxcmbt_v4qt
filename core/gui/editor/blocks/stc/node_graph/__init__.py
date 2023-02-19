@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import ClassFactory
+from core.gui import ClassFactory
 from .node_state import STCStateNode, STCCompositeStateNode, STCBackdropNode, STCInitialStateNode
 from .node_base import BaseSTCNode
 from .node_item_simple_state import STCStateItemState

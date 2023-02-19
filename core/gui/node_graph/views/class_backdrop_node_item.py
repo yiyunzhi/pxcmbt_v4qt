@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 from ..core.class_base import PropertyDef
 from ..core.define import Z_VAL_PIPE
 from .class_base_node_view_item import BaseNodeViewItem

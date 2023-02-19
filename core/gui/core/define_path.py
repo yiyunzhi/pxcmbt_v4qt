@@ -20,9 +20,9 @@
 #
 # ------------------------------------------------------------------------------
 import os, pathlib
-from application.define_path import GUI_PATH
+from core.application.define_path import CORE_GUI_PATH
 
-_ASSETS_PATH = pathlib.Path(GUI_PATH).joinpath('assets')
+_ASSETS_PATH = pathlib.Path(CORE_GUI_PATH).joinpath('assets')
 ASSETS_PATH = _ASSETS_PATH.resolve()
 _ASSETS_IMAGE_PATH = _ASSETS_PATH.joinpath('image')
 ASSETS_IMAGE_PATH = _ASSETS_IMAGE_PATH.resolve()
@@ -30,8 +30,8 @@ ASSETS_IMAGE_PATH = _ASSETS_IMAGE_PATH.resolve()
 SPLASH_BG_IMAGE_PATH = _ASSETS_IMAGE_PATH.joinpath('splash.png').resolve()
 LOGO_PATH = _ASSETS_IMAGE_PATH.joinpath('logo.png').resolve()
 
-_CONFIG_PATH = pathlib.Path(GUI_PATH).joinpath('config')
-CONFIG_PATH = pathlib.Path(GUI_PATH).joinpath('config').resolve()
+_CONFIG_PATH = pathlib.Path(CORE_GUI_PATH).joinpath('config')
+CONFIG_PATH = pathlib.Path(CORE_GUI_PATH).joinpath('config').resolve()
 CFG_APP_MODE_ACTION_YAML_PATH=_CONFIG_PATH.joinpath('cfg_app_mode_action.yaml').resolve()
 CFG_APP_MB_YAML_PATH=_CONFIG_PATH.joinpath('cfg_app_mb.yaml').resolve()
 # DIR_NAME_IPOD_ENGINES = 'ipod_engines'

@@ -1,5 +1,5 @@
 from typing import Dict
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from .define import (EnumOverlayMode,
                      EnumDockWidgetArea, EnumIconColor,

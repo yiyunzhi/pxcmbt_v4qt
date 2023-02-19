@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import typing
-from gui import QtCore, QtWidgets
+from core.gui.qtimp import QtCore, QtWidgets
 from ..core.commands import NodeViewPropertyChangedCmd
 from ..core.class_base import PropertyDef
 from ..core.exceptions import NodePropertyError

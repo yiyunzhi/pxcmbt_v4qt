@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import math, typing
-from gui import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 from ..core.define import (EnumLayoutDirection,
                            ITEM_CACHE_MODE,
                            EnumPipeShapeStyle,

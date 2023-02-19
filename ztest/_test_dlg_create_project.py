@@ -20,7 +20,7 @@ import sys
 #
 #
 # ------------------------------------------------------------------------------
-from gui.ui.dlg_create_project import CreateProjectDialog
+from core.gui.ui.dlg_create_project import CreateProjectDialog
 from ztest._test_main_frame import app, TestFrame
 
 frame = TestFrame()

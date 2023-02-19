@@ -20,11 +20,11 @@ import os.path
 #
 # ------------------------------------------------------------------------------
 import sys
-from gui import QtWidgets
+from core.gui.qtimp import QtWidgets
 from core.gui._ref_qtnode_graph.class_node_graph import NodeGraph
-from gui._ref_qtnode_graph.nodes.class_base_node import BaseNode
-from gui._ref_qtnode_graph.nodes.class_group_node import GroupNode
-from gui._ref_qtnode_graph.widgets.class_minimap_view import MiniMapGraphicsView
+from core.gui._ref_qtnode_graph.nodes.class_base_node import BaseNode
+from core.gui._ref_qtnode_graph.nodes.class_group_node import GroupNode
+from core.gui._ref_qtnode_graph.widgets.class_minimap_view import MiniMapGraphicsView
 from ztest._test_main_frame import TestFrame, app
 
 

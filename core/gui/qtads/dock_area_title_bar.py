@@ -1,7 +1,7 @@
 import typing
 from typing import TYPE_CHECKING, Optional
 import logging
-from PySide6 import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from .define import (EnumDockFlags, EnumDragState, EnumBitwiseOP,
                      EnumDockWidgetFeature, EnumTitleBarButton,

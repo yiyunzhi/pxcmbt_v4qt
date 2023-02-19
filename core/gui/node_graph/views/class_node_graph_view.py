@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import typing
 from distutils.version import LooseVersion
-from gui import QtGui, QtCore, QtWidgets, QtOpenGLWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets, QtOpenGLWidgets
 from ..core.define import (EnumGraphFlag, EnumGraphViewFlag)
 from ..core.class_node_graph_interactor import NodeGraphBaseInteractor
 from .class_search_widget import SearchMenuWidget

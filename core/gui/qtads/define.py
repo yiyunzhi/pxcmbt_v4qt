@@ -1,7 +1,7 @@
 import enum
 from collections import namedtuple
 
-from PySide6.QtCore import Qt, QEnum
+from core.gui.qtimp import QtCore
 
 
 class CDockInsertParam(namedtuple('DockInsertParam', ('orientation',
@@ -25,15 +25,15 @@ class EnumDockWidgetArea(enum.IntFlag):
 
 
 AREA_ALIGNMENT = {
-    EnumDockWidgetArea.TOP: Qt.AlignHCenter | Qt.AlignBottom,
-    EnumDockWidgetArea.RIGHT: Qt.AlignLeft | Qt.AlignVCenter,
-    EnumDockWidgetArea.BOTTOM: Qt.AlignHCenter | Qt.AlignTop,
-    EnumDockWidgetArea.LEFT: Qt.AlignRight | Qt.AlignVCenter,
-    EnumDockWidgetArea.CENTER: Qt.AlignCenter,
+    EnumDockWidgetArea.TOP: QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom,
+    EnumDockWidgetArea.RIGHT: QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter,
+    EnumDockWidgetArea.BOTTOM: QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop,
+    EnumDockWidgetArea.LEFT: QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter,
+    EnumDockWidgetArea.CENTER: QtCore.Qt.AlignCenter,
 
-    EnumDockWidgetArea.INVALID: Qt.AlignCenter,
-    EnumDockWidgetArea.OUTER_DOCK_AREAS: Qt.AlignCenter,
-    EnumDockWidgetArea.ALL_DOCK_AREAS: Qt.AlignCenter,
+    EnumDockWidgetArea.INVALID: QtCore.Qt.AlignCenter,
+    EnumDockWidgetArea.OUTER_DOCK_AREAS: QtCore.Qt.AlignCenter,
+    EnumDockWidgetArea.ALL_DOCK_AREAS: QtCore.Qt.AlignCenter,
 }
 
 

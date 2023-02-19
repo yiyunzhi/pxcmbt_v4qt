@@ -19,8 +19,8 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtGui, QtWidgets, QtCore
-from gui.core.define import EnumRepolishChildOptions
+from core.gui.qtimp import QtGui, QtWidgets, QtCore
+from core.gui.core.define import EnumRepolishChildOptions
 
 
 def get_qApp() -> QtWidgets.QApplication:

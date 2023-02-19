@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 from collections import defaultdict
-from gui import Serializable,ClassMapper
+from core.gui.qtimp import Serializable
 
 
 class PipeObject(Serializable):

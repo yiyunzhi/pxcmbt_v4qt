@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from PySide6 import QtCore
+from core.gui.qtimp import QtCore
 
 
 class CDockStateReader(QtCore.QXmlStreamReader):

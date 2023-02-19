@@ -19,9 +19,9 @@
 #
 #
 # ------------------------------------------------------------------------------
-from application.core.base import singleton
-from gui import QtGui, QtWidgets
-import gui.qtads as QtAds
+from core.application.core.base import singleton
+from core.gui.qtimp import QtGui, QtWidgets
+import core.gui.qtads as QtAds
 
 
 class _EnvProjectTreeViewContentPane(QtWidgets.QWidget):

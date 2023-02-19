@@ -19,13 +19,14 @@
 #
 #
 # ------------------------------------------------------------------------------
-import yaml, weakref
+import os, yaml, weakref
 from pubsub import pub
 from anytree.importer import DictImporter
-from application.core.class_hierarchy_action_model import HierarchyActionModel
-from gui import QtGui, QtWidgets
-from gui.core.define_path import CFG_APP_MB_YAML_PATH
-from gui.core.class_base import ThemeStyledUiObject, I18nUiObject
+from core.application.core.class_hierarchy_action_model import HierarchyActionModel
+from core.gui.qtimp import QtGui, QtWidgets
+from core.gui.core.class_base import ThemeStyledUiObject, I18nUiObject
+from .main_win_mb_interactor import APPMenubarInteractor
+from .define import EnumMainMenuIDs
 
 
 class APPMenubarManager(ThemeStyledUiObject, I18nUiObject):
@@ -35,7 +36,9 @@ class APPMenubarManager(ThemeStyledUiObject, I18nUiObject):
         self.mb = menu_bar
         self.container = container
         self.model = None
+        self.interactor = APPMenubarInteractor(self)
         self.refMap = weakref.WeakValueDictionary()
+        self.cfgPath = os.path.abspath(os.path.join(os.path.dirname(__file__), 'cfg_app_mb.yaml'))
 
     @staticmethod
     def parse_shortcut_ks(cfg_text: str) -> [QtGui.QKeySequence, None]:
@@ -57,7 +60,7 @@ class APPMenubarManager(ThemeStyledUiObject, I18nUiObject):
         return None
 
     def _build_menu_items(self, item: HierarchyActionModel, parent: QtWidgets.QMenu):
-        _icon_info = item.getIconInfo()
+        _icon_info = item.get_icon_info()
         _color = self.mb.palette().text().color()
         if item.children or item.asContainer:
             _menu = QtWidgets.QMenu(self.container)
@@ -99,8 +102,8 @@ class APPMenubarManager(ThemeStyledUiObject, I18nUiObject):
     def get_ref(self, k):
         return self.refMap.get(k)
 
-    def init_ui(self):
-        with open(CFG_APP_MB_YAML_PATH, 'r', encoding='utf-8') as f:
+    def setup(self):
+        with open(self.cfgPath, 'r', encoding='utf-8') as f:
             _data = yaml.load(f, Loader=yaml.SafeLoader)
             _tree = DictImporter(HierarchyActionModel).import_(_data)
         self.model = _tree
@@ -115,11 +118,14 @@ class APPMenubarManager(ThemeStyledUiObject, I18nUiObject):
                 self._build_menu_items(y, _menu)
 
     def on_theme_changed(self, topic: pub.Topic = pub.AUTO_TOPIC, **msg_data):
-        _color = self.mb.palette().text().color()
+        _palette = msg_data.get('palette')
+        if _palette is None:
+            _palette = self.mb.palette()
+        _color = _palette.text().color()
         for k in self.iconUsageRegistry.keyrefs():
             _obj = k()
             if _obj is not None:
-                _obj.setIcon(self.iconUsageRegistry.get_icon(_obj, color=_color))
+                _obj.setIcon(self.iconUsageRegistry.get_icon(_obj, color=_color, force=True))
 
     def on_locale_changed(self, topic: pub.Topic = pub.AUTO_TOPIC, **msg_data):
         for k in self.i18nUsageRegistry.keyrefs():
@@ -127,5 +133,10 @@ class APPMenubarManager(ThemeStyledUiObject, I18nUiObject):
             if _obj is not None:
                 _obj.setText(self.i18nUsageRegistry.get_i18n_text(_obj))
 
-    def getPath(self, node: HierarchyActionModel):
-        pass
+    def get_path(self, node: HierarchyActionModel):
+        return node.path
+
+    def enable(self, menu_action_id, enable=True):
+        _action = self.get_ref(menu_action_id)
+        if _action is not None:
+            _action.setEnable(enable)

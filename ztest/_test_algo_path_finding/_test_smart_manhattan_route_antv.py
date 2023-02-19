@@ -22,7 +22,7 @@
 import bisect
 import sys
 
-from gui import QtCore
+from core.gui.qtimp import QtCore
 import core.gui.module.path_router.util as util
 
 gridSizeRow = 20

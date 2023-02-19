@@ -1,4 +1,4 @@
-from gui import QtCore
+from core.gui.qtimp import QtCore
 
 
 class Spin:

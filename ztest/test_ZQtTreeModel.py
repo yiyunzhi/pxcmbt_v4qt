@@ -20,8 +20,8 @@
 #
 # ------------------------------------------------------------------------------
 import sys, anytree
-from gui import QtGui, QtWidgets, QtCore
-from gui.core.class_qt_tree_model import ZQtTreeModelItem, ZQtTreeModel
+from core.gui.qtimp import QtGui, QtWidgets, QtCore
+from core.gui.core.class_qt_tree_model import ZQtTreeModelItem, ZQtTreeModel
 
 
 def on_clicked(evt):

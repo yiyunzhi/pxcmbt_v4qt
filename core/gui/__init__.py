@@ -19,9 +19,4 @@
 #
 #
 # ------------------------------------------------------------------------------
-from PySide6 import QtCore
-from application.core.base import Serializable
 
-
-class SerializableQObject(type(QtCore.QObject), type(Serializable)):
-    pass

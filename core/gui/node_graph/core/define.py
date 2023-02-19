@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import pathlib, os
 import enum
-from gui import QtWidgets
+from core.gui.qtimp import QtWidgets
 
 # ----------------------------------------------------
 # private
