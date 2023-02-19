@@ -36,6 +36,90 @@ done: use weakref of icon in a global registry, if theme changed then change the
 todo: ->doing: selector: welcome,model,blocks,requirements(in docu group or testsuite???),
     testsuite,test-executor??,docu(test result in testexecutor group),extends(function in define group)
     ,define, -spacer- help
+selMode Model:
+    - abilities
+        -ability 1
+            - prototype
+        -ability 2
+            - prototype
+            ...
+    - prototype components
+        - cmp1
+        - cmp2
+        ...
+It sounds like you have a model with two main components - abilities and behavior components - with a substructure
+where each ability has a prototype that is implemented as a chart, and the behavior components provide elements that can be used in the prototype.
+
+This kind of model structure can be effective in a number of ways, such as allowing you to modularize the model and reuse components.
+Here are a few suggestions that could be useful for this structure:
+
+Make sure your abilities are well-defined and have clear specifications, so that they can be implemented consistently across different prototypes.
+It may also be helpful to use a common interface or API for abilities, so that they can be easily connected to different prototypes.
+
+Define a clear structure for the behavior components, so that it is easy to find and reuse elements that are needed in the prototypes.
+
+Consider using a design pattern such as the Factory pattern to create the ability prototypes. This can help you create a consistent way to generate
+new instances of abilities in the prototypes.
+
+Use version control to track changes to the model, including changes to the prototypes and behavior components. This can help you keep track of changes and ensure
+that you can easily revert to earlier versions if necessary.
+
+Overall, it sounds like you have a promising structure for your model. By keeping the components well-defined and making use of design patterns and version control,
+you can create a robust and reusable model that can be easily maintained and updated over time.
+
+class Ability:
+    def __init__(self, name, prototype):
+        self.name = name
+        self.prototype = prototype
+
+    def execute(self, input_data):
+        # Execute the ability prototype with input_data
+        self.prototype.execute(input_data)
+
+
+class AbilityPrototype:
+    def __init__(self, chart):
+        self.chart = chart
+
+    def execute(self, input_data):
+        # Execute the statechart with input_data
+        self.chart.execute(input_data)
+
+
+class StateChart:
+    def __init__(self, name, states, transitions):
+        self.name = name
+        self.states = states
+        self.transitions = transitions
+
+    def execute(self, input_data):
+        # Execute the statechart with input_data
+        current_state = self.get_initial_state()
+        while not self.is_final_state(current_state):
+            input_data, current_state = self.process_input(input_data, current_state)
+
+    def get_initial_state(self):
+        # Get the initial state of the chart
+        pass
+
+    def is_final_state(self, state):
+        # Check if the given state is a final state
+        pass
+
+    def process_input(self, input_data, current_state):
+        # Process the input data and return the updated input data and the new state
+        pass
+
+
+class PrototypeComponent:
+    def __init__(self, name):
+        self.name = name
+
+    def process(self, input_data):
+        # Process the input data with the behaviour component
+        pass
+
+
 done: improve QTADS while darktheme setup
 done: left put a mode select sidebar, default only centraldockarea
 done: mode selector in group, every action from same group will in tabWidget grouped.
@@ -46,6 +130,7 @@ done: STC Editor https://gist.github.com/Axel-Erfurt/8c84b5e70a1faf894879cd2ab99
 todo: event in a host during the design phase is only an interface, if events host add to the model, then could bind event with the events from other model emitted.
         in solution do a declaration of an event.
 todo: has builtin fn solution: sendEvent
+todo: the component in model could add IOD with contextmenu
 todo: IPODEntity muss have RT,IPOD
 todo: model only accepted IPODEntity while DND
 todo: tester only accepted IPODEntityModel while DND, create Test[Testrun,ReqLink]->drop IPODEntityModel->setting etc.constraint...->build testcase->run
