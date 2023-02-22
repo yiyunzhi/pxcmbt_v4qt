@@ -16,7 +16,6 @@
   {% else %}
   line-height: {{13|density(densityScale, density_interval=8)}}px;
   {% endif %}
-
   selection-background-color: {{colors.primaryLightColor}};
   selection-color: {{colors.primaryTextColor}};
 }
@@ -69,7 +68,7 @@
 }
 /*Basic widgets*/
 QWidget {
-        background-color: {{colors.secondaryDarkColor}};
+   background-color: {{colors.secondaryDarkColor}};
 }
 
 QGroupBox,
@@ -981,18 +980,15 @@ QToolBar::separator:vertical {
   border-bottom: 1px solid {{colors.secondaryLightColor}};
   height: 1px;
 }
-#modeSelToolBar {
-    border:none;
-}
+
 /*  ------------------------------------------------------------------------  */
 /*  QToolButton  */
 
 QToolButton {
   background: {{colors.secondaryDarkColor}};
   border: 0px;
-  height: {{36|density(densityScale)}}px;
-  margin: 3px;
-  padding: 3px;
+  margin: 1px;
+  padding: 1px;
   /*
   border-right: 12px solid {{colors.secondaryDarkColor}};
   border-left: 12px solid {{colors.secondaryDarkColor}};
@@ -1019,6 +1015,10 @@ QToolButton:checked {
   /*
   border-left: 12px solid {{colors.secondaryLightColor}};
   border-right: 12px solid {{colors.primaryColor}};*/
+}
+
+QToolButton[popupMode="1"] { /* only for MenuButtonPopup */
+    padding-right: 10px; /* make way for the popup button */
 }
 
 /*  ------------------------------------------------------------------------  */

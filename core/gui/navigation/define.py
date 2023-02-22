@@ -23,8 +23,6 @@
 class EnumAppModeMenuIDs:
     WELCOME = 1000
     MODEL = 1010
-    BLOCKS = 1020
-    ENV = 1030
     TESTER = 1040
     HELP = 1050
 

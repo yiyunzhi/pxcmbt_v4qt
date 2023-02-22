@@ -33,45 +33,45 @@ children:
         children: []
         layoutModifiers:
           - uid: app.model
-            module: core.gui.editor.model.pane_model_project_tree_view
-            class: ModelProjectTreeViewContentDockPane
+            module: core.gui.panes.pane_model_project_tree_view
+            class: ModelProjectNodeTreeViewDockPane
             target: projectTreeView
             policy: replace
-      - label: blocks
-        oid: 2
-        uid: 1020
-        i18nNs: app
-        iconNs: fa
-        iconName: ph.puzzle-piece
-        checkable: true
-        initCheckState: false
-        shortcut:
-        handle:
-        children: []
-        layoutModifiers:
-          - uid: app.blocks
-            module: core.gui.editor.blocks.pane_blocks_project_tree_view
-            class: BlocksProjectTreeViewContentDockPane
-            target: projectTreeView
-            policy: replace
-
-      - label: environment
-        oid: 3
-        uid: 1030
-        i18nNs: app
-        iconNs: fa
-        iconName: ri.settings-6-line
-        checkable: true
-        initCheckState: false
-        shortcut:
-        handle:
-        children: []
-        layoutModifiers:
-          - uid: app.environment
-            module: core.gui.editor.env.pane_env_project_tree_view
-            class: EnvProjectTreeViewContentDockPane
-            target: projectTreeView
-            policy: replace
+#      - label: blocks
+#        oid: 2
+#        uid: 1020
+#        i18nNs: app
+#        iconNs: fa
+#        iconName: ph.puzzle-piece
+#        checkable: true
+#        initCheckState: false
+#        shortcut:
+#        handle:
+#        children: []
+#        layoutModifiers:
+#          - uid: app.blocks
+#            module: core.gui.editor.blocks.pane_blocks_project_tree_view
+#            class: BlocksProjectTreeViewContentDockPane
+#            target: projectTreeView
+#            policy: replace
+#
+#      - label: environment
+#        oid: 3
+#        uid: 1030
+#        i18nNs: app
+#        iconNs: fa
+#        iconName: ri.settings-6-line
+#        checkable: true
+#        initCheckState: false
+#        shortcut:
+#        handle:
+#        children: []
+#        layoutModifiers:
+#          - uid: app.environment
+#            module: core.gui.editor.env.pane_env_project_tree_view
+#            class: EnvProjectTreeViewContentDockPane
+#            target: projectTreeView
+#            policy: replace
       - label: tester
         oid: 4
         uid: 1040
@@ -84,11 +84,11 @@ children:
         handle:
         children: []
         layoutModifiers:
-          - uid: app.blocks
-            module: core.gui.editor.tester.pane_tester_project_tree_view
-            class: TesterProjectTreeViewContentDockPane
+          - uid: app.tester
+            module: core.gui.panes.pane_tester_project_tree_view
+            class: TesterProjectNodeTreeViewDockPane
             target: projectTreeView
-            policy: append
+            policy: replace
   - label: '='
     # a spacer()
     oid: 5

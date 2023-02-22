@@ -5,22 +5,27 @@ QMenu::icon{ /* appearance of a 'checked' icon */
     height:24px;
 }
 
+QTreeView {
+    border: none;
+    border-radius: 0px;
+}
 
 #modeSelToolBar {
     min-width: 48px;
+    border:none;
 }
-#modeSelToolBar QToolButton{
+#modeSelToolBar > QToolButton{
     color:{{colors.primaryTextColor}};
-    min-width:32px;
-    min-height:32px;
-    margin-right:6px;
+    min-width:36px;
+    min-height:36px;
+    margin-right:4px;
 }
-#modeSelToolBar QToolButton::menu-indicator {
+#modeSelToolBar > QToolButton::menu-indicator {
     image: url(icon:/primary/rightarrow.svg);
     subcontrol-origin: margin;
     subcontrol-position: center right;
 }
-#modeSelToolBar QToolButton::menu-indicator:open {
+#modeSelToolBar > QToolButton::menu-indicator:open {
     image: url(icon:/primary/rightarrow.svg);
 }
 
@@ -76,7 +81,7 @@ CDockAreaTitleBar {
 }
 
 CDockAreaWidget[focused="true"] CDockAreaTitleBar {
-	border-bottom: 2px solid palette(highlight);
+	border-bottom: 2px solid {{colors.primaryColor}};
 }
 
 CTitleBarButton {
@@ -86,11 +91,11 @@ CTitleBarButton {
 }
 
 CDockAreaTitleBar CTitleBarButton:hover{
-    border: 1px solid palette(window);
+    border: 1px solid {{colors.secondaryDarkColor}};
 }
 
 CDockAreaTitleBar CTitleBarButton:pressed{
-    border: 1px solid palette(window);
+    border: 1px solid {{colors.secondaryDarkColor}};
 }
 /*todo*/
 #tabsMenuButton::menu-indicator {
@@ -126,10 +131,10 @@ CDockAreaTitleBar CTitleBarButton:pressed{
 CDockWidgetTab {
     color: {{colors.secondaryTextColor}};
 	background: {{colors.secondaryLightColor|opacity(0.5)}};
-	border-color: palette(light);
+	border-color: {{colors.secondaryLightColor|opacity(0.8)}};
 	border-style: solid;
 	border-width: 0 1px 0 0;
-	padding: 0 0px;
+	padding: 0px;
 	border-radius: 0px;
 }
 
@@ -143,7 +148,6 @@ CDockWidgetTab[activeTab="true"] {
 CDockWidgetTab QLabel {
 	color: {{colors.secondaryTextColor}};
 	font-size: 12px;
-	padding-bottom:4px;
 }
 
 CDockWidgetTab[activeTab="true"] QLabel {
@@ -163,17 +167,17 @@ CDockWidgetTab[activeTab="true"] QLabel {
 }
 
 #tabCloseButton:hover {
-	border: 1px solid rgba(0, 0, 0, 32);
+	border: 1px solid {{colors.secondaryTextColor}};
 }
 
 #tabCloseButton:pressed {
-   border: 1px solid rgba(0, 0, 0, 32);
+   border: 1px solid {{colors.secondaryTextColor}};
 }
 
 /* Focus related styling */
 CDockWidgetTab[focused="true"] {
-	background: palette(highlight);
-	border-color: palette(highlight);
+	background: {{colors.primaryColor}};
+	border-color: {{colors.primaryColor}};
 }
 
 CDockWidgetTab[focused="true"] > #tabCloseButton {
@@ -195,7 +199,7 @@ CDockWidgetTab[focused="true"] > #tabCloseButton:pressed {
 }
 
 CDockWidgetTab[focused="true"] QLabel {
-	color: palette(light);
+	color: {{colors.secondaryTextColor}};
 }
 
 
@@ -205,7 +209,7 @@ CDockWidgetTab[focused="true"] QLabel {
  *****************************************************************************/
 CDockWidget {
 	background: {{colors.secondaryDarkColor|opacity(0.5)}};
-	border-color: palette(mid);
+	border-color: {{colors.secondaryColor|opacity(0.8)}};
 	border-style: solid;
 	border-radius: 0px;
 	border-width: 1px;
@@ -248,19 +252,19 @@ CAutoHideTab {
 
 CAutoHideTab:hover
 {
-	color: palette(highlight);
+	color: {{colors.primaryColor|opacity(0.8)}};
 }
 
 
 CAutoHideTab[pIconOnly="false"][eSideBarLocation="0"],
 CAutoHideTab[pIconOnly="false"][eSideBarLocation="2"]  {
-	border-top: 4px solid palette(light);
+	border-top: 4px solid {{colors.secondaryLightColor|opacity(0.5)}};
 }
 
 
 CAutoHideTab[pIconOnly="false"][eSideBarLocation="1"],
 CAutoHideTab[pIconOnly="false"][eSideBarLocation="3"] {
-	border-bottom: 4px solid palette(light);
+	border-bottom: 4px solid {{colors.secondaryLightColor|opacity(0.5)}};
 }
 
 
@@ -269,7 +273,7 @@ CAutoHideTab:hover[pIconOnly="false"][eSideBarLocation="0"],
 CAutoHideTab:hover[pIconOnly="false"][eSideBarLocation="2"],
 CAutoHideTab[pIconOnly="false"][eSideBarLocation="0"][pActivTab="true"],
 CAutoHideTab[pIconOnly="false"][eSideBarLocation="2"][pActivTab="true"]  {
-	border-top: 4px solid palette(highlight);
+	border-top: 4px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 
@@ -277,7 +281,7 @@ CAutoHideTab:hover[pIconOnly="false"][eSideBarLocation="1"],
 CAutoHideTab:hover[pIconOnly="false"][eSideBarLocation="3"],
 CAutoHideTab[pIconOnly="false"][eSideBarLocation="1"][pActivTab="true"],
 CAutoHideTab[pIconOnly="false"][eSideBarLocation="3"][pActivTab="true"] {
-	border-bottom: 4px solid palette(highlight);
+	border-bottom: 4px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 
@@ -285,19 +289,19 @@ CAutoHideTab[pIconOnly="false"][eSideBarLocation="3"][pActivTab="true"] {
  * Auto hide tabs with icon only
  */
 CAutoHideTab[pIconOnly="true"][eSideBarLocation="0"] {
-	border-top: 4px solid palette(light);
+	border-top: 4px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 CAutoHideTab[pIconOnly="true"][eSideBarLocation="1"] {
-	border-left: 4px solid palette(light);
+	border-left: 4px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 CAutoHideTab[pIconOnly="true"][eSideBarLocation="2"] {
-	border-right: 6px solid palette(light);
+	border-right: 6px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 CAutoHideTab[pIconOnly="true"][eSideBarLocation="3"] {
-	border-bottom: 6px solid palette(light);
+	border-bottom: 6px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 
@@ -306,22 +310,22 @@ CAutoHideTab[pIconOnly="true"][eSideBarLocation="3"] {
  */
 CAutoHideTab:hover[pIconOnly="true"][eSideBarLocation="0"],
 CAutoHideTab[pIconOnly="true"][eSideBarLocation="0"][pActivTab="true"] {
-	border-top: 4px solid palette(highlight);
+	border-top: 4px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 CAutoHideTab:hover[pIconOnly="true"][eSideBarLocation="1"],
 CAutoHideTab[pIconOnly="true"][eSideBarLocation="1"][pActivTab="true"] {
-	border-left: 4px solid palette(highlight);
+	border-left: 4px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 CAutoHideTab:hover[pIconOnly="true"][eSideBarLocation="2"],
 CAutoHideTab[pIconOnly="true"][eSideBarLocation="2"][pActivTab="true"] {
-	border-right: 4px solid palette(highlight);
+	border-right: 4px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 CAutoHideTab:hover[pIconOnly="true"][eSideBarLocation="3"],
 CAutoHideTab[pIconOnly="true"][eSideBarLocation="3"][pActivTab="true"] {
-	border-bottom: 4px solid palette(highlight);
+	border-bottom: 4px solid {{colors.primaryColor|opacity(0.8)}};
 }
 
 
@@ -343,19 +347,19 @@ CAutoHideSideBar{
 
 
 CAutoHideSideBar[eSideBarLocation="0"] {
-	border-bottom: 1px solid palette(dark);
+	border-bottom: 1px solid {{colors.secondaryDarkColor}};
 }
 
 CAutoHideSideBar[eSideBarLocation="1"] {
-	border-right: 1px solid palette(dark);
+	border-right: 1px solid {{colors.secondaryDarkColor}};
 }
 
 CAutoHideSideBar[eSideBarLocation="2"] {
-	border-left: 1px solid palette(dark);
+	border-left: 1px solid {{colors.secondaryDarkColor}};
 }
 
 CAutoHideSideBar[eSideBarLocation="3"] {
-	border-top: 1px solid palette(dark);
+	border-top: 1px solid {{colors.secondaryDarkColor}};
 }
 
 
@@ -363,12 +367,12 @@ CAutoHideSideBar[eSideBarLocation="3"] {
  * CAutoHideDockContainer
  *****************************************************************************/
 CAutoHideDockContainer {
-	background: palette(window);
+	background: {{colors.secondaryDarkColor}};
 }
 
 
 CAutoHideDockContainer CDockAreaTitleBar {
-	background: palette(highlight);
+	background: {{colors.primaryColor}};
 	padding: 0px;
 	border: none;
 }
@@ -379,7 +383,7 @@ CAutoHideDockContainer CDockAreaTitleBar {
  * overwrite the CAutoHideDockContainer CDockAreaTitleBar rule
  */
 CAutoHideDockContainer CDockAreaWidget[focused="true"] CDockAreaTitleBar {
-	background: palette(highlight);
+	background: {{colors.primaryColor}};
 	padding: 0px;
 	border: none;
 }
@@ -387,7 +391,7 @@ CAutoHideDockContainer CDockAreaWidget[focused="true"] CDockAreaTitleBar {
 
 #autoHideTitleLabel {
 	padding-left: 4px;
-	color: palette(light);
+	color: {{colors.secondaryLightColor}};
 }
 
 
@@ -427,22 +431,22 @@ CAutoHideDockContainer CTitleBarButton:pressed {
  * CResizeHandle
  *****************************************************************************/
 CResizeHandle {
-	background: palette(window);
+	background: {{colors.secondaryDarkColor}};
 }
 
 
 CAutoHideDockContainer[eSideBarLocation="0"] CResizeHandle {
-	border-top: 1px solid palette(dark);
+	border-top: 1px solid {{colors.secondaryDarkColor}};
 }
 
 CAutoHideDockContainer[eSideBarLocation="1"] CResizeHandle {
-	border-left: 1px solid palette(dark);
+	border-left: 1px solid {{colors.secondaryDarkColor}};
 }
 
 CAutoHideDockContainer[eSideBarLocation="2"] CResizeHandle {
-	border-right: 1px solid palette(dark);
+	border-right: 1px solid {{colors.secondaryDarkColor}};
 }
 
 CAutoHideDockContainer[eSideBarLocation="3"] CResizeHandle {
-	border-top: 1px solid palette(dark);
+	border-top: 1px solid {{colors.secondaryDarkColor}};
 }

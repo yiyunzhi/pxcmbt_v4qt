@@ -196,6 +196,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def _do_create_project(self, name, path):
         # todo: finish this
         print('todo: do create the project')
+        APP_CONTEXT.app = self
+        self.update_app_mode_toolbar_state()
 
     def _open_help_content(self):
         pass
@@ -259,7 +261,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if APP_CONTEXT.app is None:
             for x in self.appModeToolbar.actions():
                 if x.data():
-                    if x.data().uid in [EnumAppModeMenuIDs.MODEL, EnumAppModeMenuIDs.BLOCKS, EnumAppModeMenuIDs.ENV, EnumAppModeMenuIDs.TESTER]:
+                    if x.data().uid in [EnumAppModeMenuIDs.MODEL, EnumAppModeMenuIDs.TESTER]:
                         x.setVisible(False)
         else:
             for x in self.appModeToolbar.actions():
@@ -367,12 +369,15 @@ class MainWindow(QtWidgets.QMainWindow):
             APP_CONTEXT.paletteAppliedFlag = True
             self.busyIndicator.color = APP_CONTEXT.app_theme_context.get('colors').get('primaryColor')
             pub.sendMessage('theme.themeChanged', theme=APP_CONTEXT.app_theme, palette=self.palette())
+            event.accept()
         super().changeEvent(event)
 
     @staticmethod
     def set_theme(theme_name='auto', q_app=None):
         if APP_CONTEXT.app_theme != theme_name:
             _q_app = QtWidgets.QApplication.instance() if q_app is None else q_app
-            _theme_context = apply_theme(_q_app, densityScale='-1', custom_styles=APP_CONTEXT.app_css, update_palette=True, theme=theme_name)
+            _theme_context = apply_theme(_q_app, densityScale='-1', custom_styles=APP_CONTEXT.app_css, theme=theme_name)
+            QtGui.QPixmapCache.clear()
             APP_CONTEXT.app_theme = theme_name
             APP_CONTEXT.app_theme_context = _theme_context
+            q_app.processEvents()

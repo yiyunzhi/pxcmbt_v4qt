@@ -188,16 +188,15 @@ def format_custom_stylesheet(stylesheet: str, theme_context, **option):
 
 
 def apply_theme(app: QtWidgets.QApplication,
-                theme: str = 'auto',
-                update_palette=False, custom_styles=None, **option):
+                theme: str = 'auto',custom_styles=None, **option):
     if theme == 'auto':
         _is_dark = darkdetect.isDark()
         theme = 'dark' if _is_dark else 'default'
 
     _theme_context = get_theme_context(theme)
-    if update_palette:
-        _palette = do_update_palette(_theme_context)
-        app.setPalette(_palette)
+    # if update_palette:
+    #     _palette = do_update_palette(_theme_context)
+    #     app.setPalette(_palette)
     if not option:
         option = DEFAULT_STYLESHEET_OPTION
     else:
@@ -212,4 +211,5 @@ def apply_theme(app: QtWidgets.QApplication,
 
     set_icons_theme(_theme_context, cache_path=ICON_CACHE_PATH)
     app.setStyleSheet(_stylesheet)
+
     return _theme_context
