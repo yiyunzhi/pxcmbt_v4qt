@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 
 from ..core.define import Z_VAL_PIPE, EnumNodeStyleProperty
 from .class_node_item_base import BaseNodeItem

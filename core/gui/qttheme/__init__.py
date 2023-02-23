@@ -20,7 +20,7 @@ import os.path
 #
 #
 # ------------------------------------------------------------------------------
-import logging, pathlib, attrdict
+import logging, pathlib, addict
 from PySide6 import QtWidgets, QtCore, QtGui
 import jinja2, yaml
 import darkdetect
@@ -86,9 +86,9 @@ def get_theme_context(theme='default'):
 def get_stylesheet(theme_context: dict, **option):
     # use theme get color->generate stylesheet
     _template = JINJA_ENV.get_template('base.css')
-    return _template.render(colors=attrdict.AttrDict(theme_context.get('colors', {})),
-                            font=attrdict.AttrDict(theme_context.get('font', {})),
-                            extra=attrdict.AttrDict(theme_context.get('extra', {})), **option)
+    return _template.render(colors=addict.Dict(theme_context.get('colors', {})),
+                            font=addict.Dict(theme_context.get('font', {})),
+                            extra=addict.Dict(theme_context.get('extra', {})), **option)
 
 
 def do_update_palette(theme_context: dict):
@@ -182,9 +182,9 @@ def do_update_palette(theme_context: dict):
 
 def format_custom_stylesheet(stylesheet: str, theme_context, **option):
     _template = jinja2.Template(stylesheet)
-    return _template.render(colors=attrdict.AttrDict(theme_context.get('colors', {})),
-                            font=attrdict.AttrDict(theme_context.get('font', {})),
-                            extra=attrdict.AttrDict(theme_context.get('extra', {})), **option)
+    return _template.render(colors=addict.Dict(theme_context.get('colors', {})),
+                            font=addict.Dict(theme_context.get('font', {})),
+                            extra=addict.Dict(theme_context.get('extra', {})), **option)
 
 
 def apply_theme(app: QtWidgets.QApplication,

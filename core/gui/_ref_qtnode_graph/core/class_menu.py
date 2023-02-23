@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import re
 from distutils.version import LooseVersion
-from gui import QtGui,QtCore
+from core.gui.qtimp import QtGui,QtCore
 
 from .exceptions import NodeMenuError
 from ..widgets.class_menu_widget import BaseMenu, GraphAction, NodeAction

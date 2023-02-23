@@ -27,6 +27,57 @@ import core.gui.qtads as QtAds
 from core.gui.core.class_base import ThemeStyledUiObject, I18nUiObject
 
 
+class ModelProjectNodeContent(QtCore.QObject):
+    sigNodeAdded = QtCore.Signal(str)
+    sigNodeDeleted = QtCore.Signal(str)
+    sigNodeChanged = QtCore.Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.label = None
+        self.iconNs = None
+        self.iconName = None
+        self.domainRoot = None
+
+    def sort(self):
+        pass
+
+    def delete(self, nid):
+        pass
+
+    def add(self, obj):
+        pass
+
+
+class ModelProjectNodeManager:
+    def __init__(self, content, view=None):
+        if view is None:
+            view = ModelProjectNodeTreeViewDockPane()
+        self.view = view
+        self.view.setVisible(False)
+        self.content = content
+        self._prevContent = None
+
+    def set_view(self, view: QtWidgets.QWidget):
+        self.view = view
+        self.view.update_content(self.content)
+
+    def set_content(self, content: ModelProjectNodeContent):
+        self._prevContent = self.content
+        self.content = content
+        self.view.update()
+
+    def restore_content(self):
+        self.set_content(self._prevContent)
+
+    def ensure_view(self, parent=None):
+        if self.view is None:
+            return
+        self.view.setParent(parent)
+        self.wire_signals()
+        self.view.setVisible(True)
+
+
 class _ModelProjectNodeTreeView(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
     def __init__(self, parent=None):
         super().__init__(parent)

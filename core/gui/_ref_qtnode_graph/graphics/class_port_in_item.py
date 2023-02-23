@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtCore, QtGui, QtWidgets
+from core.gui.qtimp import QtCore, QtGui, QtWidgets
 
 from ..core.define import EnumPortStyleProperty,EnumNodeStyleProperty
 from .class_node_item_base import NodeItem

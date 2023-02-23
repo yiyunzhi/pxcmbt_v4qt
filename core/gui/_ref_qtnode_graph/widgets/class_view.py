@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import math
 from distutils.version import LooseVersion
-from gui import QtGui, QtCore, QtWidgets, QtOpenGLWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets, QtOpenGLWidgets
 
 from ..core.define import (
     EnumLayoutDirection, EnumPortType, EnumPipeShape

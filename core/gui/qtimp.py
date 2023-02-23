@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from PySide6 import QtCore, QtGui, QtWidgets,__version__ as QTVersion
+from PySide6 import QtCore, QtGui, QtWidgets,__version__ as QTVersion,QtOpenGLWidgets
 
 from core.application.core.base import Serializable
 from core.application.core.class_factory import ClassFactory

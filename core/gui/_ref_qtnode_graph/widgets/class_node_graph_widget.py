@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtWidgets, QtGui
+from core.gui.qtimp import QtWidgets, QtGui
 
 from ..core.define import (
     EnumNodeStyleProperty, EnumViewFeature, EnumViewNavStyle

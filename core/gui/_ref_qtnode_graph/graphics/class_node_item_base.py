@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 from collections import OrderedDict
 
-from gui import QtGui, QtCore, QtWidgets
+from core.gui.qtimp import QtGui, QtCore, QtWidgets
 
 from ..core.define import (
     ITEM_CACHE_MODE,

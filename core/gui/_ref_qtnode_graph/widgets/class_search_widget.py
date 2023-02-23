@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import re
 from collections import OrderedDict
-from gui import QtCore, QtWidgets, QtGui
+from core.gui.qtimp import QtCore, QtWidgets, QtGui
 from ..core.define import EnumViewFeature, EnumViewNavStyle
 
 

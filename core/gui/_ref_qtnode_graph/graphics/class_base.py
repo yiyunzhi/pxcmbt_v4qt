@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 
-from gui import QtCore, QtWidgets
+from core.gui.qtimp import QtCore, QtWidgets
 
 from ..core.define import (
     Z_VAL_NODE,

@@ -19,19 +19,20 @@
 #
 #
 # ------------------------------------------------------------------------------
-import i18n, os
+import os
 from pubsub import pub
 from core.gui.qtimp import QtCore, QtWidgets
 from core.gui.qttheme import apply_theme
-from core.application.define_path import I18N_PATH
+from core.application.define_path import CORE_I18N_PATH
+from core.application.zI18n import zI18n
 
-i18n.load_path.append(I18N_PATH)
+zI18n.load_path.append(CORE_I18N_PATH)
 
-i18n.set('fallback', 'en')
-i18n.set('enable_memoization', True)
+zI18n.set('fallback', 'en')
+zI18n.set('enable_memoization', True)
 SUPPORTED_LANG_BCP47 = ['en', 'de']
 _lang_code = QtCore.QLocale().system().bcp47Name()
-i18n.set('locale', _lang_code)
+zI18n.set('locale', _lang_code)
 QtCore.QCoreApplication.setOrganizationName("PxCEMBT")
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
 app = QtWidgets.QApplication()
@@ -68,7 +69,7 @@ class TestFrame(QtWidgets.QMainWindow):
         _qApp = QtWidgets.QApplication.instance()
         _q_local = QtCore.QLocale(lang)
         self.setLocale(_q_local)
-        i18n.set('locale', _q_local.bcp47Name())
+        zI18n.set('locale', _q_local.bcp47Name())
         # _qApp.postEvent(self, QtCore.QEvent(QtCore.QEvent.Type.LanguageChange))
         pub.sendMessage('locale.localeChange', locale=_q_local)
 

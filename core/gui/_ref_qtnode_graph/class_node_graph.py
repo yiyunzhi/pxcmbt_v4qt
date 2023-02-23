@@ -24,7 +24,7 @@ import json
 import os
 import re
 
-from gui import QtGui, QtWidgets, QtCore
+from core.gui.qtimp import QtGui, QtWidgets, QtCore
 
 from .core.commands import (NodeAddedCmd,
                             NodeRemovedCmd,

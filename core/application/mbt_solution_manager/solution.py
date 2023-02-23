@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from attrdict import AttrDict
+from addict import Dict
 
 
 class MBTSolution:
@@ -39,7 +39,7 @@ class MBTSolution:
         self._modulePath = kwargs.get('module_path')
         _solutionDef = kwargs.get('solution_def', dict())
         assert all([k in _solutionDef for k in self.EXPECT_DEF_KEY])
-        self._solutionDef = AttrDict(_solutionDef)
+        self._solutionDef = Dict(_solutionDef)
 
     @property
     def module_(self):

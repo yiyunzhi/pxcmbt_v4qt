@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from gui import QtGui
+from core.gui.qtimp import QtGui
 from .define import EnumPortType
 
 
