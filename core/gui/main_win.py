@@ -27,6 +27,7 @@ from core.gui.qtimp import QtCore, QtGui, QtWidgets
 from core.application.define import APP_NAME, APP_VERSION, EnumAppMsg
 import core.gui.qtads as QtAds
 from core.gui.core.define_path import LOGO_PATH
+from core.gui.core.define import EnumLayoutModifierPolicy
 from core.application.zI18n import zI18n
 from core.gui.components.widget_busy_indicator import QBusyIndicator
 from core.gui.navigation.main_win_tb_mode_sel import AppModeSelectSideBar
@@ -44,6 +45,9 @@ _logger = logging.getLogger()
 
 class MainWindow(QtWidgets.QMainWindow):
     # todo: top toolbar???
+    LAYOUT_TARGET_CENTER = 'centerWidget'
+    LAYOUT_TARGET_PROJECT_TREE_VIEW = 'projectTreeView'
+
     def __init__(self, parent=None):
         super().__init__(parent)
         # init local
@@ -56,6 +60,8 @@ class MainWindow(QtWidgets.QMainWindow):
         QtAds.CDockManager.setConfigFlag(QtAds.EnumDockMgrConfigFlag.XmlCompressionEnabled, False)
         QtAds.CDockManager.setConfigFlag(QtAds.EnumDockMgrConfigFlag.FocusHighlighting, True)
         self.dockManager = QtAds.CDockManager(self)
+
+        self.projectTreeViewPaneArea = None
         self.currentAppMode = None
         # menubar
         self.menuViewMenu = None
@@ -84,7 +90,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # _sa.setAllowedAreas(QtAds.EnumDockWidgetArea.NO_AREA)
 
         # project pane
-        self.projectTreeViewPaneArea = None
         # self.projectTreeViewPane = ProjectTreeViewPane(self)
         # self.projectPaneDockArea = self.dockManager.addDockWidget(QtAds.EnumDockWidgetArea.LEFT, self.projectTreeViewPane)
         # self.projectPaneDockArea.setAllowedAreas(QtAds.EnumDockWidgetArea.OUTER_DOCK_AREAS)
@@ -234,11 +239,11 @@ class MainWindow(QtWidgets.QMainWindow):
             if not self.projectTreeViewPaneArea.isVisible():
                 self.projectTreeViewPaneArea.toggleView(True)
             if widget is not None:
+                _old_l = self.projectTreeViewPaneArea.dockWidgets()
+                for x in _old_l:
+                    x.toggleView(False)
                 if widget not in self.projectTreeViewPaneArea.dockWidgets():
-                    _old_l = self.projectTreeViewPaneArea.dockWidgets()
                     self.dockManager.addDockWidget(area, widget, self.projectTreeViewPaneArea)
-                    for x in _old_l:
-                        self.projectTreeViewPaneArea.removeDockWidget(x)
                 else:
                     if widget.isClosed():
                         widget.toggleView(True)
@@ -277,7 +282,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print('on_menubar_action_triggered', event.data())
 
     def on_app_mode_changed(self, event: QtGui.QAction):
-        print('on_app_mode_changed', event.data())
+        print('on_app_mode_changed', event.data(), self.projectTreeViewPaneArea.dockWidgets() if self.projectTreeViewPaneArea is not None else '')
         if not event.isChecked():
             return
         _data = event.data()
@@ -285,10 +290,9 @@ class MainWindow(QtWidgets.QMainWindow):
         _layout_modifiers = _data.layoutModifiers
         for x in _layout_modifiers:
             self._handle_app_mode_layout_modifier(x)
-        # todo: send signal appModeChanged
+        pub.sendMessage(EnumAppMsg.sigAppModeChanged, mode=event.data())
 
     def _handle_app_mode_layout_modifier(self, modifier):
-        # todo: policy and target as enum defined.
         _w_cls = modifier.import_module()
         if _w_cls is None:
             _err = 'can not import the require module: %s.%s' % (modifier.module, modifier.class_)
@@ -298,7 +302,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         _w = _w_cls(self.dockManager)
         _w.setMinimumSizeHintMode(QtAds.EnumMinimumSizeHintMode.FROM_DOCK_WIDGET)
-        if modifier.target == 'centerWidget':
+        if modifier.target == self.LAYOUT_TARGET_CENTER:
             _cw = self.dockManager.centralWidget()
             if _cw is None:
                 self.menuViewMenu.addAction(_w.toggleViewAction())
@@ -309,18 +313,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 _cw_da_ow = _cw_da.openedDockWidgets()
                 if _w not in _cw_da_w:
                     self.menuViewMenu.addAction(_w.toggleViewAction())
-                    if modifier.policy == 'append':
+                    if modifier.policy == EnumLayoutModifierPolicy.APPEND:
                         self.dockManager.addDockWidget(QtAds.EnumDockWidgetArea.CENTER, _w, _cw_da)
-                    elif modifier.policy == 'replace':
+                    elif modifier.policy == EnumLayoutModifierPolicy.REPLACE:
                         self.dockManager.setCentralWidget(_w)
                 elif _w not in _cw_da_ow:
                     # for the singleton instance
                     _w.toggleView(_w.isClosed())
         else:
-            if modifier.target == 'projectTreeView':
-                if modifier.policy == 'append':
+            if modifier.target == self.LAYOUT_TARGET_PROJECT_TREE_VIEW:
+                if modifier.policy == EnumLayoutModifierPolicy.APPEND:
                     self._add_widget_to_project_view_pane(_w, QtAds.EnumDockWidgetArea.CENTER)
-                elif modifier.policy == 'replace':
+                elif modifier.policy == EnumLayoutModifierPolicy.REPLACE:
                     self._replace_widget_to_project_view_pane(_w, QtAds.EnumDockWidgetArea.CENTER)
 
     def create_perspective_ui(self):

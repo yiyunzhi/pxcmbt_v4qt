@@ -20,6 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 from pubsub import pub
+from core.application.core.base import singleton
 from core.gui.core.class_qt_tree_model import ZQtTreeModel, ZQtTreeModelItem
 from core.gui.qtimp import QtWidgets, QtCore, QtGui
 from core.gui.utils.helper import get_qApp
@@ -49,7 +50,7 @@ class ModelProjectNodeContent(QtCore.QObject):
         pass
 
 
-class ModelProjectNodeManager:
+class ModelProjectNodeTreeController:
     def __init__(self, content, view=None):
         if view is None:
             view = ModelProjectNodeTreeViewDockPane()
@@ -79,10 +80,11 @@ class ModelProjectNodeManager:
 
 
 class _ModelProjectNodeTreeView(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None,controller=None):
         super().__init__(parent)
         ThemeStyledUiObject.__init__(self)
         I18nUiObject.__init__(self)
+        self.controller=controller
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.toolbar = QtWidgets.QToolBar(self)
         self.treeView = QtWidgets.QTreeView(self)
@@ -143,7 +145,7 @@ class _ModelProjectNodeTreeView(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiOb
         if event.type() == QtCore.QEvent.Type.PaletteChange:
             event.accept()
 
-
+@singleton
 class ModelProjectNodeTreeViewDockPane(QtAds.CDockWidget):
     def __init__(self, parent=None):
         super().__init__('Model', parent)

@@ -49,5 +49,7 @@ todo: model only accepted IPODEntity while DND
 todo: tester only accepted IPODEntityModel while DND, create Test[Testrun,ReqLink]->drop IPODEntityModel->setting etc.constraint...->build testcase->run
 
 ----------------------docu-------------------------
+---------------------ref---------------------------
+https://github.com/czyt1988/SARibbon
 
 

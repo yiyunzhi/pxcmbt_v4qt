@@ -27,4 +27,6 @@ class EnumRepolishChildOptions(enum.Enum):
     RepolishDirectChildren = enum.auto()
     RepolishChildrenRecursively = enum.auto()
 
-
+class EnumLayoutModifierPolicy:
+    REPLACE='replace'
+    APPEND='append'

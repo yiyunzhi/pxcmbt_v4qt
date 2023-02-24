@@ -20,6 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 from pubsub import pub
+from core.application.core.base import singleton
 from core.gui.core.class_qt_tree_model import ZQtTreeModel, ZQtTreeModelItem
 from core.gui.qtimp import QtWidgets, QtCore
 import core.gui.qtads as QtAds
@@ -54,7 +55,7 @@ class _TesterProjectNodeTreeView(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiO
     def set_content(self, model: ZQtTreeModel):
         self.treeView.setModel(model)
 
-
+@singleton
 class TesterProjectNodeTreeViewDockPane(QtAds.CDockWidget):
     def __init__(self, parent=None):
         super().__init__('Tester', parent)
