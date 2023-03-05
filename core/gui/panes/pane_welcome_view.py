@@ -21,13 +21,15 @@
 # ------------------------------------------------------------------------------
 from pubsub import pub
 from core.application.core.base import singleton
+from core.application.class_application_context import ApplicationContext
+from core.application.define import EnumAppMsg
 from core.gui.qtimp import QtWidgets, QtCore
 import core.gui.qtads as QtAds
-from core.gui.core.class_base import ThemeStyledUiObject, I18nUiObject
+from core.gui.core.class_base import ZView
 from core.gui.components.widget_recent_file_list import RecentFileListWidget
 
 
-class _WelcomePane(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
+class _WelcomePane(QtWidgets.QWidget, ZView):
     TITLE_LABEL_STYLE = """
         QLabel {
             text-transform: uppercase;
@@ -45,9 +47,10 @@ class _WelcomePane(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
         """
 
     def __init__(self, parent):
-        super().__init__(parent)
-        ThemeStyledUiObject.__init__(self)
-        I18nUiObject.__init__(self)
+        QtWidgets.QWidget.__init__(self, parent)
+        ZView.__init__(self)
+        self._appCtx = ApplicationContext()
+        _btn_icon_option = {'color': self.palette().highlight().color()}
         self.mainLayout = QtWidgets.QGridLayout(self)
         self.labelStart = QtWidgets.QLabel('Start', self)
         self.labelRecent = QtWidgets.QLabel('Recent', self)
@@ -63,14 +66,16 @@ class _WelcomePane(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
         self.btnNewProj = QtWidgets.QPushButton(self)  # icon,text,parent
         self.btnNewProj.setIconSize(self.btnIconSize)
         self.btnNewProj.setFlat(True)
-        self.iconUsageRegistry.register(self.btnNewProj, 'fa', 'mdi6.plus')
+        _icon = self._appCtx.iconResp.get_icon(self.btnNewProj, icon_ns='fa', icon_name='mdi6.plus', setter='setIcon', options=_btn_icon_option)
+        self.btnNewProj.setIcon(_icon)
         self.btnNewProj.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         self.labelOpenProj = QtWidgets.QLabel('open a project. a dialog will be showed up then a project\ncould be selected and loaded up.', self)
         self.labelOpenProj.setWordWrap(True)
         self.btnOpenProj = QtWidgets.QPushButton(self)  # icon,text,parent
         self.btnOpenProj.setIconSize(self.btnIconSize)
         self.btnOpenProj.setFlat(True)
-        self.iconUsageRegistry.register(self.btnOpenProj, 'fa', 'mdi6.folder-open-outline')
+        _icon = self._appCtx.iconResp.get_icon(self.btnOpenProj, icon_ns='fa', icon_name='mdi6.folder-open-outline', setter='setIcon', options=_btn_icon_option)
+        self.btnOpenProj.setIcon(_icon)
         self.btnOpenProj.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
 
         self.recentFilesList = RecentFileListWidget(self)
@@ -79,14 +84,21 @@ class _WelcomePane(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
         self.btnOpenHelp = QtWidgets.QPushButton(self)  # icon,text,parent
         self.btnOpenHelp.setIconSize(self.btnIconSize)
         self.btnOpenHelp.setFlat(True)
-        self.iconUsageRegistry.register(self.btnOpenHelp, 'fa', 'mdi6.help-box')
+        _icon = self._appCtx.iconResp.get_icon(self.btnOpenHelp, icon_ns='fa', icon_name='mdi6.help-box', setter='setIcon', options=_btn_icon_option)
+        self.btnOpenHelp.setIcon(_icon)
         self.btnOpenHelp.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.labelStart.setStyleSheet(self.TITLE_LABEL_STYLE)
+        self.labelRecent.setStyleSheet(self.TITLE_LABEL_STYLE)
+        self.labelHelp.setStyleSheet(self.TITLE_LABEL_STYLE)
+        self.labelNewProj.setStyleSheet(self.DESCRIPTION_LABEL_STYLE)
+        self.labelOpenProj.setStyleSheet(self.DESCRIPTION_LABEL_STYLE)
         # bind event
         # todo: subsribe the project open, delete event, read from setting then update recentFilesList
         self.recentFilesList.sigItemClicked.connect(self.on_open_recent_file_requested)
         self.btnNewProj.clicked.connect(self.on_new_project_required)
         self.btnOpenProj.clicked.connect(self.on_open_project_required)
         self.btnOpenHelp.clicked.connect(self.on_open_help_required)
+        pub.subscribe(self.on_project_state_changed, EnumAppMsg.sigProjectStateChanged)
         # layout
         self.mainLayout.setContentsMargins(25, 15, 5, 5)
         self.mainLayout.addWidget(self.labelStart, 0, 0, QtCore.Qt.AlignmentFlag.AlignTop)
@@ -103,16 +115,19 @@ class _WelcomePane(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
         self.setLayout(self.mainLayout)
 
     def _init_recent_file_list(self):
+        _rl = list()
         _setting = QtCore.QSettings()
-        # todo: remove test data
-        _setting.setValue('recentFiles', [('proj0', '2022-10-13', r'c:\project\aa.proj'),
-                                          ('proj1', '2022-11-23', r'c:\project\ab.proj'),
-                                          ('proj2', '2023-11-23', r'c:\project\ac.proj'),
-                                          ])
-        _setting.sync()
-        _files = _setting.value('recentFiles', [])
-        if _files:
-            self.recentFilesList.set_content(_files)
+        _setting.beginGroup('recentFiles')
+        _size = _setting.beginReadArray('files')
+        for i in range(_size):
+            _setting.setArrayIndex(i)
+            _rl.append((_setting.value('name'), _setting.value('date'), _setting.value('path')))
+        _setting.endArray()
+        _setting.endGroup()
+        self.recentFilesList.set_content(_rl)
+
+    def on_project_state_changed(self, topic=pub.AUTO_TOPIC, **msg_data):
+        self._init_recent_file_list()
 
     def on_open_recent_file_requested(self, path):
         pub.sendMessage('project.open', path=path)
@@ -126,24 +141,18 @@ class _WelcomePane(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
     def on_open_help_required(self, evt):
         pub.sendMessage('help.open')
 
-    def on_theme_changed(self, topic: pub.Topic = pub.AUTO_TOPIC, **msg_data):
-        self.btnNewProj.setIcon(self.iconUsageRegistry.get_icon(self.btnNewProj, color=self.palette().highlight().color()))
-        self.btnOpenProj.setIcon(self.iconUsageRegistry.get_icon(self.btnOpenProj, color=self.palette().highlight().color()))
-        self.btnOpenHelp.setIcon(self.iconUsageRegistry.get_icon(self.btnOpenHelp, color=self.palette().highlight().color()))
-        self.labelStart.setStyleSheet(self.TITLE_LABEL_STYLE)
-        self.labelRecent.setStyleSheet(self.TITLE_LABEL_STYLE)
-        self.labelHelp.setStyleSheet(self.TITLE_LABEL_STYLE)
-        self.labelNewProj.setStyleSheet(self.DESCRIPTION_LABEL_STYLE)
-        self.labelOpenProj.setStyleSheet(self.DESCRIPTION_LABEL_STYLE)
-
-    def on_locale_changed(self, topic: pub.Topic = pub.AUTO_TOPIC, **msg_data):
-        pass
-
 
 @singleton
-class WelcomeDockPane(QtAds.CDockWidget):
+class WelcomeDockPane(QtAds.CDockWidget, ZView):
     def __init__(self, parent):
-        super().__init__('welcome', parent)
+        QtAds.CDockWidget.__init__(self, '', parent)
+        ZView.__init__(self)
+        self.zViewTitle = 'welcome'
         self.setFeature(QtAds.EnumDockWidgetFeature.DELETE_CONTENT_ON_CLOSE, False)
         _widget = _WelcomePane(self)
         self.setWidget(_widget)
+
+    @ZView.title.setter
+    def title(self, title):
+        self.zViewTitle = title
+        self.setWindowTitle(title)

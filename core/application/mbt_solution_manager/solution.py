@@ -31,7 +31,7 @@ class MBTSolution:
         'version': '1.0.1',
         'editor': '',
     """
-    EXPECT_DEF_KEY = ['icon', 'namespace', 'type', 'version', 'editor', 'builtinEntitiesPath']
+    EXPECT_DEF_KEY = ['icon', 'namespace', 'type', 'version', 'view', 'builtinEntitiesPath', 'setup', 'uuid']
 
     def __init__(self, **kwargs):
         self._module = kwargs.get('module')
@@ -52,3 +52,23 @@ class MBTSolution:
     @property
     def solution_def(self):
         return self._solutionDef
+
+    @property
+    def is_valid(self):
+        return self._solutionDef.get('setup') is not None
+
+    @property
+    def name(self):
+        return '{} v{}'.format(self._solutionDef.get('namespace'), self._solutionDef.get('version'))
+
+    @property
+    def uuid(self):
+        return self._solutionDef['uuid']
+
+    @property
+    def icon_info(self):
+        return self._solutionDef.get('icon')
+
+    def run_setup(self, app_ctx):
+        if self.is_valid:
+            self._solutionDef.get('setup')(app_ctx)

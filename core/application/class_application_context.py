@@ -36,12 +36,16 @@ class ApplicationContext:
         self.mainWin = None
         self._editorMapper = UidObjectMapper()
         self._app = None
+        self.project = None
         self._appCss = None
         self._appTheme = None
         self.app_theme_context = None
         self._addonsManager = AddonsManager(self)
         self._solutionManager = MBTSolutionsManager(self)
         self.paletteAppliedFlag = False
+        self.iconResp = None
+        self.i18nResp = None
+        self.zViewFactory = None
         self.setup()
 
     @property
@@ -73,7 +77,7 @@ class ApplicationContext:
         return self._addonsManager
 
     @property
-    def mbt_solution_manager(self):
+    def mbt_solution_manager(self) -> MBTSolutionsManager:
         return self._solutionManager
 
     def setup(self):
@@ -86,6 +90,3 @@ class ApplicationContext:
     def set_app_busy(self, busy=True):
         if self.mainWin:
             self.mainWin.set_busy(busy)
-
-
-APP_CONTEXT = ApplicationContext()

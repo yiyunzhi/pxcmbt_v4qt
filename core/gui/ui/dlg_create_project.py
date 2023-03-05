@@ -20,33 +20,27 @@ import os.path
 #
 #
 # ------------------------------------------------------------------------------
-from pubsub import pub
+from core.application.zI18n import zI18n
 from core.application.define_path import PROJECT_PATH
 from core.gui.qtimp import QtWidgets, QtCore
-from core.gui.core.class_base import ThemeStyledUiObject, I18nUiObject
 from core.gui.components.widget_file_browser import FileBrowserWidget
 from core.gui.components.widget_header import HeaderWidget
 
 
-class CreateProjectDialog(QtWidgets.QDialog, ThemeStyledUiObject, I18nUiObject):
+class CreateProjectDialog(QtWidgets.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        ThemeStyledUiObject.__init__(self)
-        I18nUiObject.__init__(self)
-        _title=self.i18nUsageRegistry.get_i18n('dlg', 'create_project_title')
-        self.setWindowTitle(_title)
+        self.setWindowTitle(zI18n.t('dlg.create_project_title'))
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.formLayout = QtWidgets.QGridLayout(self)
         self.headerWidget = HeaderWidget(self)
-        self.headerWidget.set_content(_title,
-                                      description=self.i18nUsageRegistry.get_i18n('dlg', 'create_project_description'))
-        self.projectNameLabel = QtWidgets.QLabel(self)
-        self.projectPathLabel = QtWidgets.QLabel(self)
+        self.headerWidget.set_content(self.windowTitle(),
+                                      description=zI18n.t('dlg.create_project_description'))
+        self.projectNameLabel = QtWidgets.QLabel(zI18n.t('app.project_name'),self)
+        self.projectPathLabel = QtWidgets.QLabel(zI18n.t('app.project_path'),self)
         self.projectNameEdit = QtWidgets.QLineEdit(self)
         self.projectPathEdit = FileBrowserWidget(self, str(PROJECT_PATH))
         self.projectPathEdit.set_left_label_visible(False)
-        self.i18nUsageRegistry.register(self.projectNameLabel, 'app', 'project_name', func_to_set='setText', do_update=True)
-        self.i18nUsageRegistry.register(self.projectPathLabel, 'app', 'project_path', func_to_set='setText', do_update=True)
         self.buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
         # bind event
         self.buttonBox.accepted.connect(self.accept)
@@ -74,26 +68,17 @@ class CreateProjectDialog(QtWidgets.QDialog, ThemeStyledUiObject, I18nUiObject):
                                                           options=QtWidgets.QFileDialog.Option.ShowDirsOnly)
         self.projectPathEdit.filePathEdit.setText(_res)
 
-    def on_theme_changed(self, topic: pub.Topic = pub.AUTO_TOPIC, **msg_data):
-        pass
-
-    def on_locale_changed(self, topic: pub.Topic = pub.AUTO_TOPIC, **msg_data):
-        self.i18nUsageRegistry.update_i18n_text(self.projectNameLabel)
-        self.i18nUsageRegistry.update_i18n_text(self.projectPathLabel)
-        self.headerWidget.set_content(self.i18nUsageRegistry.get_i18n('dlg', 'create_project_title'),
-                                      description=self.i18nUsageRegistry.get_i18n('dlg', 'create_project_description'))
-
     def accept(self) -> None:
         _msg = QtWidgets.QMessageBox(self)
         _msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-        _msg.setWindowTitle(self.i18nUsageRegistry.get_i18n('app', 'error'))
+        _msg.setWindowTitle(zI18n.t('app.error'))
         if self.projectNameEdit.text().strip() == '' or self.projectPathEdit.filePathEdit.text().strip() == '':
-            _msg.setText(self.i18nUsageRegistry.get_i18n('err', 'empty_f').format('%s/%s' % (self.projectNameLabel.text(), self.projectPathLabel.text())))
+            _msg.setText(zI18n.t('err.empty_f').format('%s/%s' % (self.projectNameLabel.text(), self.projectPathLabel.text())))
             _msg.exec_()
             self.projectNameEdit.setFocus()
             return
         if os.path.exists(os.path.join(self.projectPathEdit.filePathEdit.text(),self.projectNameEdit.text())):
-            _msg.setText(self.i18nUsageRegistry.get_i18n('err', 'exist_f').format('%s ' % self.projectNameEdit.text()))
+            _msg.setText(zI18n.t('err.exist_f').format('%s ' % self.projectNameEdit.text()))
             _msg.exec_()
             self.projectNameEdit.setFocus()
             return

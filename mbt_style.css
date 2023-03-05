@@ -13,13 +13,17 @@ QTreeView {
 #modeSelToolBar {
     min-width: 48px;
     border:none;
+    /*border-right: 1px solid {{colors.secondaryLightColor|opacity(0.6)}};*/
+}
+#modeSelToolBar:first {
+   margin-top: 4px;
 }
 #modeSelToolBar > QToolButton{
     color:{{colors.primaryTextColor}};
     min-width:36px;
     min-height:36px;
-    margin-right:4px;
 }
+
 #modeSelToolBar > QToolButton::menu-indicator {
     image: url(icon:/primary/rightarrow.svg);
     subcontrol-origin: margin;
@@ -28,7 +32,40 @@ QTreeView {
 #modeSelToolBar > QToolButton::menu-indicator:open {
     image: url(icon:/primary/rightarrow.svg);
 }
+/***AlertWidget***/
+#zAlertWidget {
+    padding: 0px;
+}
+#zAlertWidget > QLabel.title {
+    font-size: 16px;
+    font-weight: bold;
+}
+#zAlertWidget > QLabel.sub-title {
+    font-size: 13px;
+    font-weight: 600;
+}
+#zAlertWidget.danger {
+    border:1px solid {{extra.danger}};
+}
+#zAlertWidget.warning {
+    border:1px solid {{extra.warning}};
+}
+#zAlertWidget.success {
+    border:1px solid {{extra.success}};
+}
+#zAlertWidget.danger> QLabel.title {
+    color: {{extra.danger}};
+}
+#zAlertWidget.danger> #closeButton {
+    border:none;
+}
+#zAlertWidget.warning> QLabel.title {
+    color: {{extra.warning}};
+}
 
+#zAlertWidget.success> QLabel.title {
+    color: {{extra.success}};
+}
 /***qtads***/
 /*****************************************************************************
  * CDockContainerWidget

@@ -4,10 +4,17 @@ en:
   blocks: blocks
   blocks1: blocks1
   blocks2: blocks2
+  create_new_ability: create an new ability
   help: help
+  new: new
+  new_f: 'new %s'
+  name: name
+  type: type
   error: Error
   warning: Warning
   success: Success
+  prompt_detail: detail prompt
+  prompt_new_ability_detail: ability detail prompt
   project_name: ProjectName
   project_path: ProjectPath
   project_open: OpenProject

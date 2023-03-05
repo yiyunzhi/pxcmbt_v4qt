@@ -6,10 +6,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : __init__.py.py
+# Sourcefile(s) : pane_welcome_mc.py
 # ------------------------------------------------------------------------------
 #
-# File          : __init__.py.py
+# File          : pane_welcome_mc.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,20 +19,17 @@
 #
 #
 # ------------------------------------------------------------------------------
-_uuid = 'c976859c-956d-4075-8ff4-c9f6600b91ac'
+from core.gui.core.class_base import ZViewManager, ZViewContentContainer
 
 
-def setup(app_ctx):
-    print('fn solution setup')
+class HelpContentContainer(ZViewContentContainer):
+    def __init__(self, **kwargs):
+        ZViewContentContainer.__init__(self, **kwargs)
+
+    def transform_data(self):
+        return self._content
 
 
-SOLUTION_DEF = {
-    'uuid': _uuid,
-    'icon': ['fa', 'mdi.function-variant'],
-    'namespace': 'Functions',
-    'type': 'fn',
-    'version': '1.0.1',
-    'view': None,
-    'setup': setup,
-    'builtinEntitiesPath': ''
-}
+class HelpViewManager(ZViewManager):
+    def __init__(self, **kwargs):
+        ZViewManager.__init__(self, **kwargs)

@@ -4,10 +4,17 @@ de:
   blocks: bausteins
   blocks1: bausteins1
   blocks2: bausteins2
+  create_new_ability: erstellen ein ability
   help: hilfe
+  new: neu
+  new_f: 'neu %s'
   error: Fehler
+  name: name
+  type: type
   warning: Warnung
   success: Erfolg
+  prompt_detail: detail erfassen
+  prompt_new_ability_detail: ability detail erfassen
   project_name: ProjektName
   project_path: ProjektPfad
   project_open: Projekt Offen

@@ -375,7 +375,7 @@ class CDockManager(CDockContainerWidget):
     sigFloatingWidgetCreated = QtCore.Signal(CFloatingDockContainer)
     # sigDockWidgetAdded = QtCore.Signal(CDockWidget)
     sigDockWidgetAdded = QtCore.Signal(QtCore.QObject)
-    sigDockWidgetAboutToBeRemoved = QtCore.Signal()
+    sigDockWidgetAboutToBeRemoved = QtCore.Signal(CDockWidget)
     sigDockWidgetRemoved = QtCore.Signal(CDockWidget)
     sigPerspectiveListLoaded = QtCore.Signal()
     sigDockAreaCreated = QtCore.Signal(CDockAreaWidget)
@@ -679,7 +679,7 @@ class CDockManager(CDockContainerWidget):
 
         self.sigDockWidgetAboutToBeRemoved.emit(widget)
         self._mgrThis.dockWidgetsMap.pop(widget.objectName())
-        CDockContainerWidget.removeDockWidget(widget)
+        super().removeDockWidget(widget)
         widget.setDockManager(None)
         self.sigDockWidgetRemoved.emit(widget)
 

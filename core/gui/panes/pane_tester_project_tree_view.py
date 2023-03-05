@@ -21,17 +21,15 @@
 # ------------------------------------------------------------------------------
 from pubsub import pub
 from core.application.core.base import singleton
-from core.gui.core.class_qt_tree_model import ZQtTreeModel, ZQtTreeModelItem
+from core.gui.core.class_qt_tree_model import ZQtTreeModel
+from core.gui.core.class_base import ZView, Toggling
 from core.gui.qtimp import QtWidgets, QtCore
 import core.gui.qtads as QtAds
-from core.gui.core.class_base import ThemeStyledUiObject, I18nUiObject
 
 
-class _TesterProjectNodeTreeView(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiObject):
+class _TesterProjectNodeTreeView(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        ThemeStyledUiObject.__init__(self)
-        I18nUiObject.__init__(self)
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.toolbar = QtWidgets.QToolBar(self)
         self.treeView = QtWidgets.QTreeView(self)
@@ -55,10 +53,17 @@ class _TesterProjectNodeTreeView(QtWidgets.QWidget, ThemeStyledUiObject, I18nUiO
     def set_content(self, model: ZQtTreeModel):
         self.treeView.setModel(model)
 
+
 @singleton
-class TesterProjectNodeTreeViewDockPane(QtAds.CDockWidget):
+class TesterProjectNodeTreeViewDockPane(QtAds.CDockWidget, ZView):
     def __init__(self, parent=None):
-        super().__init__('Tester', parent)
+        super().__init__('', parent)
+        self.zViewTitle = 'Tester'
         self.setFeature(QtAds.EnumDockWidgetFeature.DELETE_CONTENT_ON_CLOSE, False)
         _widget = _TesterProjectNodeTreeView(self)
         self.setWidget(_widget)
+
+    @ZView.title.setter
+    def title(self, title):
+        self.zViewTitle = title
+        self.setWindowTitle(title)

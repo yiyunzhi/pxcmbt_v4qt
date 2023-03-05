@@ -49,6 +49,8 @@ children:
         initCheckState: false
         shortcut: '!Save'
         handle:
+          method: 'on_save_project'
+          kwargs: {}
       - label: save_project_as
         uid: 104
         oid: 4

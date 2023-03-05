@@ -21,30 +21,53 @@ import types
 #
 # ------------------------------------------------------------------------------
 from typing import Union, Any
+from core.application.class_application_context import ApplicationContext
+from core.application.core.base import Serializable
 from core.application.class_tree import UUIDTreeNode
 from core.gui.qtimp import QtCore, QtGui
-from core.gui.core.class_base import ThemeStyledUiObject
 
 
-class ZQtTreeModelItem(UUIDTreeNode, ThemeStyledUiObject):
+class ZQtTreeModelItem(UUIDTreeNode, Serializable):
+    serializeTag = '!ZQtTreeModelItem'
+
     def __init__(self, **kwargs):
-        ThemeStyledUiObject.__init__(self)
         UUIDTreeNode.__init__(self, **kwargs)
+        self.appCtx = ApplicationContext()
         self.parent = kwargs.get('parent')
         self.label = kwargs.get('label', 'newNode')
-        self.iconPath = kwargs.get('icon_path', ('fa', 'ri.file-line'))
+        self.readonly = kwargs.get('readonly', False)
+        self.iconPath = kwargs.get('icon_path', ['fa', 'ri.file-line'])
         self.iconColor = kwargs.get('icon_color', '#777')
         self.columnAttrs = kwargs.get('column_attrs', [])
-        self.flags = kwargs.get('flags', QtCore.Qt.ItemFlag.ItemIsEnabled
-                                | QtCore.Qt.ItemFlag.ItemIsSelectable
-                                )
-        self.iconUsageRegistry.register(self, *self.iconPath)
+        self.userData = kwargs.get('user_data')
+        _flags = kwargs.get('flags')
+        if _flags is None:
+            self.flags = QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable
+        else:
+            self.flags = QtCore.Qt.ItemFlag(_flags)
+        _children = kwargs.get('children')
+        if _children:
+            self.children = _children
 
     def __repr__(self):
         return 'label={}'.format(self.label)
 
     def __str__(self):
         return self.__repr__()
+
+    @property
+    def serializer(self):
+        return {
+            'uuid': self.uuid,
+            'label': self.label,
+            'readonly': self.readonly,
+            'icon_path': self.iconPath,
+            'icon_color': self.iconColor,
+            'column_attrs': self.columnAttrs,
+            'flags': self.flags.value,
+            'children': self.children,
+            'user_data': self.userData,
+        }
 
     def addChild(self, child):
         child.parent = self
@@ -117,16 +140,13 @@ class ZQtTreeModelItem(UUIDTreeNode, ThemeStyledUiObject):
         elif role == QtCore.Qt.ItemDataRole.CheckStateRole and self.hasFlag(QtCore.Qt.ItemFlag.ItemIsUserCheckable):
             return self.getCheckedState()
         elif role == QtCore.Qt.ItemDataRole.DecorationRole:
-            _icon = self.iconUsageRegistry.get_icon(self, color=self.iconColor)
+            _icon = self.appCtx.iconResp.get_icon(self, icon_ns=self.iconPath[0], icon_name=self.iconPath[1], options={'color': self.iconColor})
             return _icon
-
-    def on_theme_changed(self, **msg_data):
-        _palette: QtGui.QPalette = msg_data.get('palette')
-        if _palette is not None:
-            self.iconUsageRegistry.get_icon(self, force=True, color=_palette.text().color())
 
 
 class ZQtTreeModel(QtCore.QAbstractItemModel):
+    sigDataChanged = QtCore.Signal(QtCore.QModelIndex, QtCore.QModelIndex, list, object)
+
     def __init__(self, tree_item: ZQtTreeModelItem = None, column_names: list = [], parent=None):
         super().__init__(parent)
         self._columnNames = column_names
@@ -136,16 +156,20 @@ class ZQtTreeModel(QtCore.QAbstractItemModel):
             self.rootItem = ZQtTreeModelItem()
         self.iconProvider = None
 
+    @property
+    def column_names(self):
+        return self._columnNames
+
     def assignTree(self, tree_node: ZQtTreeModelItem):
         self.rootItem = tree_node.root
 
     def columnCount(self, index: Union[QtCore.QModelIndex, QtCore.QPersistentModelIndex]) -> int:
         if index.isValid():
-            _node=index.internalPointer()
+            _node = index.internalPointer()
             if _node is not None:
                 return index.internalPointer().columnCount()
             else:
-                print('columnCount:',_node)
+                print('columnCount:', _node)
                 return len(self._columnNames)
         else:
             return len(self._columnNames)
@@ -155,7 +179,7 @@ class ZQtTreeModel(QtCore.QAbstractItemModel):
             return None
         _item = index.internalPointer()
         if _item is None:
-            print('data:', index,role)
+            print('data:', index, role)
             return
         # if role == QtCore.Qt.ItemDataRole.DecorationRole:
         #     return QtGui.QIcon(self.iconProvider.standardIcon(QtWidgets.QStyle.StandardPixmap.SP_FileIcon))
@@ -168,7 +192,14 @@ class ZQtTreeModel(QtCore.QAbstractItemModel):
         _item = index.internalPointer()
         if _item is None:
             return False
-        return _item.setData(index.column(), value)
+        # if role in [QtCore.Qt.ItemDataRole.DisplayRole, QtCore.Qt.ItemDataRole.EditRole]:
+        #     self.setData(index, self.data(index), QtCore.Qt.ItemDataRole.UserRole + 4)
+        _old_value = self.data(index)
+        _ret = _item.setData(index.column(), value)
+        if _ret:
+            self.dataChanged.emit(index, index)
+            self.sigDataChanged.emit(index, index, [], _old_value)
+        return _ret
 
     def flags(self, index: Union[QtCore.QModelIndex, QtCore.QPersistentModelIndex]) -> QtCore.Qt.ItemFlag:
         if not index.isValid():
@@ -203,7 +234,7 @@ class ZQtTreeModel(QtCore.QAbstractItemModel):
             else:
                 _parent_item = self.rootItem
         if _parent_item is None:
-            print('data:', row,column,parent_index)
+            print('data:', row, column, parent_index)
             return QtCore.QModelIndex()
         _child_item = _parent_item.child(row)
         if _child_item:

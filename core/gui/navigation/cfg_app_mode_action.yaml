@@ -1,3 +1,4 @@
+# viewName in modifiers refe to core.gui.define EnumGuiViewName
 label: _root
 children:
   - label: '[]'
@@ -14,9 +15,7 @@ children:
         handle:
         children: []
         layoutModifiers:
-          - uid: app.welcome
-            module: core.gui.panes.pane_welcome
-            class: WelcomeDockPane
+          - view_name: app.welcome
             target: centerWidget
             policy: replace
 
@@ -32,9 +31,7 @@ children:
         handle:
         children: []
         layoutModifiers:
-          - uid: app.model
-            module: core.gui.panes.pane_model_project_tree_view
-            class: ModelProjectNodeTreeViewDockPane
+          - view_name: app.modelProjectTreeView
             target: projectTreeView
             policy: replace
 #      - label: blocks
@@ -84,9 +81,7 @@ children:
         handle:
         children: []
         layoutModifiers:
-          - uid: app.tester
-            module: core.gui.panes.pane_tester_project_tree_view
-            class: TesterProjectNodeTreeViewDockPane
+          - view_name: app.testerProjectTreeView
             target: projectTreeView
             policy: replace
   - label: '='
@@ -107,8 +102,6 @@ children:
     handle:
     children: []
     layoutModifiers:
-      - uid: app.help
-        module: core.gui.editor.env.pane_env_project_tree_view
-        class: EnvProjectTreeViewContentPane
+      - view_name: app.help
         target: floatRight
         policy: append

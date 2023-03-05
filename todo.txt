@@ -32,9 +32,17 @@ done: splash window
 done: copy pin, detach, arrowdown, to theme folder
 done: paletteChangeEvent not triggert or three times. use custom event instead.
 done: use weakref of icon in a global registry, if theme changed then change the icon color in weakref.
+-------------ModelViewTree--------------
+done: changeName of node,
+done: changeName of node at same time change the viewTitle,
+done: deleteNode of node at same time close the view,
+done: undostack, accept the menubar undo/redo only if this view has focused. zManger has signal report the stateChanged. commands:[rename]
+todo: changeDetect, use undoStack?? viewManager add a method name has_changed()->bool,
 -------------app--------------
 done: improve QTADS while darktheme setup
 done: left put a mode select sidebar, default only centraldockarea
+todo: the menubar change the state base on the currentFocusedDockWidget
+todo: the dockWidget close emit to app, before close must be checked if content change, if yes then ask user whether save it?
 done: mode selector in group, every action from same group will in tabWidget grouped.
 todo: help doc: https://doc.qt.io/qtforpython/overviews/qthelp-framework.html
 todo: toggle toolbar https://doc.qt.io/qtforpython/PySide6/QtWidgets/QToolBar.html?highlight=toggleviewaction#PySide6.QtWidgets.PySide6.QtWidgets.QToolBar.toggleViewAction

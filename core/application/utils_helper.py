@@ -20,12 +20,14 @@
 #
 # ------------------------------------------------------------------------------
 import ast, functools, json, decimal, gettext, pathlib
+import datetime
 import os, sys, platform, math, uuid, bitstring, glob
 from collections import defaultdict
 from itertools import tee
 import psutil
-from .define import APP_CONSOLE_TIME_WX_FMT, SIZE_UNITS
-#from .python.class_evaluator import DEFAULT_EXPRESSION_EVALUATOR
+from .define import APP_CONSOLE_TIME_WX_FMT, SIZE_UNITS,APP_TIME_PY_FMT
+
+# from .python.class_evaluator import DEFAULT_EXPRESSION_EVALUATOR
 
 RGET_RSET_DELIMITER = "."
 
@@ -261,17 +263,6 @@ def util_cvt_path_to_platform_spec(path):
     return st
 
 
-def util_wx_tree_walk_branches(tree, item, cb):
-    """
-    a generator that recursively yields child nodes of a wx.TreeCtrl
-    """
-    _item, cookie = tree.GetFirstChild(item)
-    while _item.IsOk():
-        if cb(_item): break
-        util_wx_tree_walk_branches(tree, _item, cb)
-        _item, cookie = tree.GetNextChild(item, cookie)
-
-
 def util_is_dir_exist(path):
     return os.path.exists(path)
 
@@ -430,3 +421,7 @@ def util_approximate_size(size, flag_1024_or_1000=False):
 
 def util_get_actual_pubsub_topic_for_instance(instance: object, topic_name: str):
     return '%s:%s' % (id(instance), topic_name)
+
+
+def util_date_time_now():
+    return datetime.datetime.now().strftime(APP_TIME_PY_FMT)

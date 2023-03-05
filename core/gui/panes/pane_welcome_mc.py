@@ -6,10 +6,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : class_layout_modifier.py
+# Sourcefile(s) : pane_welcome_mc.py
 # ------------------------------------------------------------------------------
 #
-# File          : class_layout_modifier.py
+# File          : pane_welcome_mc.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,17 +19,17 @@
 #
 #
 # ------------------------------------------------------------------------------
-import importlib
+from core.gui.core.class_base import ZViewManager, ZViewContentContainer
 
 
-class LayoutModifier:
+class WelcomeContentContainer(ZViewContentContainer):
     def __init__(self, **kwargs):
-        self.uid = kwargs.get('uid', None)
-        self.module = kwargs.get('module', None)
-        self.class_ = kwargs.get('class', None)
-        self.target = kwargs.get('target', None)
-        self.policy = kwargs.get('policy', None)
+        ZViewContentContainer.__init__(self, **kwargs)
 
-    def import_module(self):
-        _module = importlib.import_module(self.module)
-        return getattr(_module, self.class_)
+    def transform_data(self):
+        return self._content
+
+
+class WelcomeViewManager(ZViewManager):
+    def __init__(self, **kwargs):
+        ZViewManager.__init__(self, **kwargs)

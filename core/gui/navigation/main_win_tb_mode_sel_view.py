@@ -19,23 +19,22 @@
 #
 #
 # ------------------------------------------------------------------------------
-import typing, os, yaml
 from pubsub import pub
-from anytree.importer import DictImporter
 from core.application.core.class_hierarchy_action_model import HierarchyActionModel
+from core.application.class_application_context import ApplicationContext
 from core.gui.qtimp import QtGui, QtWidgets, QtCore
-from core.gui.core.class_base import ThemeStyledUiObject, I18nUiObject
+from core.gui.core.class_base import ZView
 
 
-class AppModeSelectSideBar(QtWidgets.QToolBar, ThemeStyledUiObject, I18nUiObject):
+class AppModeSelectSideBar(QtWidgets.QToolBar, ZView):
 
     def __init__(self, parent):
         QtWidgets.QToolBar.__init__(self, 'AppModeToolBar', parent)
-        ThemeStyledUiObject.__init__(self)
-        I18nUiObject.__init__(self)
+        ZView.__init__(self)
+        self.zViewTitle = 'AppModeToolBar'
+        self._appCtx = ApplicationContext()
         self.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.setObjectName('modeSelToolBar')
-        self.cfgPath = os.path.abspath(os.path.join(os.path.dirname(__file__), 'cfg_app_mode_action.yaml'))
 
     def _createModeActionSubmenu(self, mode_node: HierarchyActionModel, parent_menu: QtWidgets.QMenu = None):
         if parent_menu is None:
@@ -47,12 +46,11 @@ class AppModeSelectSideBar(QtWidgets.QToolBar, ThemeStyledUiObject, I18nUiObject
         _color = self.palette().text().color()
         if mode_node.children:
             _p_menu = _menu.addMenu(mode_node.get_label())
-            self.i18nUsageRegistry.register(_p_menu, mode_node.i18nNs, mode_node.label)
-            _p_menu.setText(self.i18nUsageRegistry.get_i18n_text(_p_menu))
+            _i18n_t = self._appCtx.i18nResp.get_i18n(_p_menu, i18n_ns=mode_node.i18nNs, i18n_key=mode_node.label, setter='setText')
+            _p_menu.setText(_i18n_t)
             _p_menu.setData(mode_node)
             if _icon_info is not None:
-                self.iconUsageRegistry.register(_p_menu, *_icon_info)
-                _icon = self.iconUsageRegistry.get_icon(_p_menu, color=_color)
+                _icon = self._appCtx.iconResp.get_icon(_p_menu, icon_ns=_icon_info[0], icon_name=_icon_info[1], setter='setIcon')
                 if _icon is not None:
                     _p_menu.setIcon(_icon)
             for x in mode_node.children:
@@ -60,22 +58,22 @@ class AppModeSelectSideBar(QtWidgets.QToolBar, ThemeStyledUiObject, I18nUiObject
         else:
             _icon_info = mode_node.get_icon_info()
             _action = _menu.addAction(mode_node.get_label())
-            self.i18nUsageRegistry.register(_action, mode_node.i18nNs, mode_node.label)
-            _action.setText(self.i18nUsageRegistry.get_i18n_text(_action))
+            _i18n_t = self._appCtx.i18nResp.get_i18n(_action, i18n_ns=mode_node.i18nNs, i18n_key=mode_node.label, setter='setText')
+            _action.setText(_i18n_t)
             _action.setData(mode_node)
             if _icon_info is not None:
-                self.iconUsageRegistry.register(_action, *_icon_info)
-                _icon = self.iconUsageRegistry.get_icon(_action, color=_color)
+                _icon = self._appCtx.iconResp.get_icon(_action, icon_ns=_icon_info[0], icon_name=_icon_info[1], setter='setIcon')
                 if _icon is not None:
                     _action.setIcon(_icon)
 
-    def setup(self):
-        with open(self.cfgPath, 'r', encoding='utf-8') as f:
-            _data = yaml.load(f, Loader=yaml.SafeLoader)
-            _tree = DictImporter(HierarchyActionModel).import_(_data)
+    def init_actions(self, actions: list):
+        # with open(self.cfgPath, 'r', encoding='utf-8') as f:
+        #     _data = yaml.load(f, Loader=yaml.SafeLoader)
+        #     _tree = DictImporter(HierarchyActionModel).import_(_data)
+        # _active_mode_action = None
+        # _sorted = sorted(_tree.children, key=lambda x: x.oid)
         _active_mode_action = None
-        _sorted = sorted(_tree.children, key=lambda x: x.oid)
-        for x in _sorted:
+        for x in actions:
             if x.label == '=':
                 self.add_spacer()
             elif x.label == '-':
@@ -102,13 +100,12 @@ class AppModeSelectSideBar(QtWidgets.QToolBar, ThemeStyledUiObject, I18nUiObject
             _m = self
         _icon_info = mode_node.get_icon_info()
         _action = _m.addAction(mode_node.get_label())
-        self.i18nUsageRegistry.register(_action, mode_node.i18nNs, mode_node.label)
-        _action.setText(self.i18nUsageRegistry.get_i18n_text(_action))
+        _i18n_t = self._appCtx.i18nResp.get_i18n(_action, i18n_ns=mode_node.i18nNs, i18n_key=mode_node.label, setter='setText')
+        _action.setText(_i18n_t)
         _action.setData(mode_node)
         _color = self.palette().text().color()
         if _icon_info is not None:
-            self.iconUsageRegistry.register(_action, *_icon_info)
-            _icon = self.iconUsageRegistry.get_icon(_action, color=_color)
+            _icon = self._appCtx.iconResp.get_icon(_action, icon_ns=_icon_info[0], icon_name=_icon_info[1], setter='setIcon')
             if _icon is not None:
                 _action.setIcon(_icon)
         if mode_node.checkable:
@@ -135,19 +132,3 @@ class AppModeSelectSideBar(QtWidgets.QToolBar, ThemeStyledUiObject, I18nUiObject
             if x.isCheckable():
                 if x.isChecked():
                     x.setChecked(False)
-
-    def on_theme_changed(self, topic: pub.Topic = pub.AUTO_TOPIC, **msg_data):
-        _palette = msg_data.get('palette')
-        if _palette is None:
-            _palette = self.palette()
-        _color = _palette.text().color()
-        for k in self.iconUsageRegistry.keyrefs():
-            _obj = k()
-            if _obj is not None:
-                _obj.setIcon(self.iconUsageRegistry.get_icon(_obj, color=_color, force=True))
-
-    def on_locale_changed(self, topic: pub.Topic = pub.AUTO_TOPIC, **msg_data):
-        for k in self.i18nUsageRegistry.keyrefs():
-            _obj = k()
-            if _obj is not None:
-                _obj.setText(self.i18nUsageRegistry.get_i18n_text(_obj))

@@ -60,3 +60,8 @@ class MBTSolutionsManager:
                 self.add_solution(_slt)
         except Exception as e:
             raise SolutionAssertException(zI18n.t('FMT_UNKNOWN_SOLUTION_AT', path=_cur_p))
+
+    def get_solution_by_uuid(self, uuid):
+        for k, v in self.solutions.items():
+            if v.uuid == uuid:
+                return v

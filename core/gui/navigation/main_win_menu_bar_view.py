@@ -6,10 +6,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : __init__.py.py
+# Sourcefile(s) : mb_app.py
 # ------------------------------------------------------------------------------
 #
-# File          : __init__.py.py
+# File          : mb_app.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,20 +19,11 @@
 #
 #
 # ------------------------------------------------------------------------------
-_uuid = 'c976859c-956d-4075-8ff4-c9f6600b91ac'
+from core.gui.qtimp import QtWidgets
+from core.gui.core.class_base import ZView
 
 
-def setup(app_ctx):
-    print('fn solution setup')
-
-
-SOLUTION_DEF = {
-    'uuid': _uuid,
-    'icon': ['fa', 'mdi.function-variant'],
-    'namespace': 'Functions',
-    'type': 'fn',
-    'version': '1.0.1',
-    'view': None,
-    'setup': setup,
-    'builtinEntitiesPath': ''
-}
+class AppMenubar(QtWidgets.QMenuBar, ZView):
+    def __init__(self, parent=None):
+        QtWidgets.QMenuBar.__init__(self, parent)
+        self.zViewTitle = 'AppMainMenubar'

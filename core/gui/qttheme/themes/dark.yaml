@@ -14,5 +14,5 @@ colors:
 extra:
   danger: '#dc3545'
   warning: '#ffc107'
-  success: '#ffc400'
+  success: '#4cb399'
   qMenuHeight: 32

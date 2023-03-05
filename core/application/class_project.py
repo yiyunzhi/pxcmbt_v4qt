@@ -1,245 +1,201 @@
-import os, pathlib, anytree
-from dataclasses import dataclass, field as data_field
+# -*- coding: utf-8 -*-
+
+# ------------------------------------------------------------------------------
+#                                                                            --
+#                PHOENIX CONTACT GmbH & Co., D-32819 Blomberg                --
+#                                                                            --
+# ------------------------------------------------------------------------------
+# Project       : 
+# Sourcefile(s) : class_project.py
+# ------------------------------------------------------------------------------
+#
+# File          : class_project.py
+#
+# Author(s)     : Gaofeng Zhang
+#
+# Status        : in work
+#
+# Description   : siehe unten
+#
+#
+# ------------------------------------------------------------------------------
+import os
+import pathlib
+import anytree
 from anytree.exporter import DictExporter
 from anytree.importer import DictImporter
-from core.application.class_base import Serializable
-from core.application.utils_helper import util_remove_folder
-from core.application.io.class_yaml_file_io import AppYamlInfFileIO, AppYamlObjFileIO
-from .define import (APP_PROJECT_PATH,
-                     BASE_PATH,
-                     EnumProjectItemFlag,
-                     EnumProjectItemRole,
-                     EnumProjectNodeFileAttr)
-from .class_application_config import APP_CONFIG
-from .utils_helper import util_get_uuid_string
-from .class_tree_model import TreeModelAnyTreeNode, TreeModel
+from core.application.utils_helper import util_date_time_now, util_get_computer_name, util_get_uuid_string
+from core.application.core.base import Serializable, ContentContainer
+from core.application.io.class_yaml_file_io import AppYamlFileIO
+from .define_path import PROJECT_PATH
+from .define import AppConfig, APP_VERSION
 
 
-class ProjectNodeContent:
-    def __init__(self):
-        self.projectNode = None
+class ProjectHeader(Serializable):
+    serializeTag = '!ProjectHeader'
 
-    def get_child_node_by_role(self, role):
-        _node = self.projectNode
-        _filter = list(
-            filter(lambda x: x.role == role, _node.children))
-        return _filter[0] if _filter else None
-
-    def exe_cmd(self, **kwargs):
-        return True,''
-
-
-class ProjectTreeNode(TreeModelAnyTreeNode):
     def __init__(self, **kwargs):
-        TreeModelAnyTreeNode.__init__(self, **kwargs)
-        self.uuid = kwargs.get('uuid', util_get_uuid_string())
-        self.role = kwargs.get('role')
-        _flag = kwargs.get('flag', EnumProjectItemFlag.FLAG_DEFAULT)
-        self.flag = 0
-        if isinstance(_flag, list):
-            for x in _flag:
-                self.add_flag(x)
-        else:
-            assert isinstance(_flag, int), 'invalid flag. %s' % _flag
-            self.flag = _flag
-        self.icon = kwargs.get('icon', self.icon)
-        self.description = kwargs.get('description', 'no description')
-        self.contextMenu = kwargs.get('contextMenu')
-        self.fileAttr = kwargs.get('fileAttr', EnumProjectNodeFileAttr.FOLDER)
-        self.fileExtend = kwargs.get('fileExtend')
-        self.fileName = kwargs.get('fileName', self.label.lower())
-        self.content = None
-        _content = kwargs.get('content')
-        self.set_content(_content)
+        self.createdAt = kwargs.get('created_at', util_date_time_now())
+        self.appVersion = kwargs.get('app_version', APP_VERSION)
+        self.projectIOVersion = kwargs.get('project_io_version', 4)
+        self.lastUpdatedAt = kwargs.get('last_updated_at', util_date_time_now())
+        self.originalHostName = kwargs.get('original_host_name', util_get_computer_name())
+        self.hostName = kwargs.get('host_name', util_get_computer_name())
+        self.version = kwargs.get('host_name', util_get_computer_name())
+        self.userFields = kwargs.get('user_fields')
 
-    def set_content(self, content):
-        if content is not None:
-            assert isinstance(content, ProjectNodeContent), 'ProjectNodeContent is required, given <%s>' % type(content)
-            self.content = content
-            self.content.projectNode = self
+    def update(self):
+        self.lastUpdatedAt = util_date_time_now()
+        self.hostName = util_get_computer_name()
 
-    def clear_content(self):
-        self.content = None
-
-    def update_describable_data(self, name, description):
-        if self.has_flag(EnumProjectItemFlag.DESCRIBABLE):
-            self.label = name
-            self.description = description
-            if self.content is not None:
-                if hasattr(self.content, 'generalInfo'):
-                    self.content.set_general_info(name, description)
-
-    def get_file_name(self):
-        if self.fileAttr != EnumProjectNodeFileAttr.LINK:
-            if self.fileName.startswith('.'):
-                return getattr(self, self.fileName[1::])
-            else:
-                self.fileName = self.label.lower()
-                return self.fileName
-        else:
-            return self.fileName
-
-    def get_file_path(self):
-        if self.fileAttr == EnumProjectNodeFileAttr.FOLDER:
-            _parent_path = self.path
-        else:
-            _parent_path = self.path[0:-1]
-        return os.path.join(*[x.get_file_name() for x in _parent_path])
-
-    def get_file_info(self):
-        _file_path = self.get_file_path()
-        _file_base_name = None
-        if self.fileAttr == EnumProjectNodeFileAttr.FOLDER:
-            return _file_path, _file_base_name
-        elif self.fileAttr == EnumProjectNodeFileAttr.FILE:
-            _file_base_name = self.get_file_name() + self.fileExtend
-            return _file_path, _file_base_name
-        elif self.fileAttr == EnumProjectNodeFileAttr.LINK:
-            _file_path = os.path.join(BASE_PATH, self.fileName)
-            return os.path.split(_file_path)
-        else:
-            return _file_path, _file_base_name
-
-    def has_flag(self, flag):
-        return (self.flag & flag) != 0
-
-    def add_flag(self, flag):
-        self.flag |= flag
-
-    def reset_flag(self):
-        self.flag = 0
-
-
-class ProjectTreeModel(TreeModel):
-    def __init__(self):
-        TreeModel.__init__(self, ProjectTreeNode)
-        self.name = 'ProjectTreeModel'
-
-    def remove_node(self, node):
-        node.parent = None
-
-
-@dataclass
-class ProjectMeta(Serializable):
-    serialize_tag = '!ProjectMeta'
-    ipodEngineRequirements: list = data_field(default_factory=list)
+    def is_compatible(self, app_version, project_io_version):
+        return self.appVersion == app_version and self.projectIOVersion == project_io_version
 
     @property
     def serializer(self):
-        return {
-            'ipodEngineRequirements': self.ipodEngineRequirements
-        }
+        return {'created_at': self.createdAt,
+                'last_updated_at': self.lastUpdatedAt,
+                'original_host_name': self.originalHostName,
+                'host_name': self.hostName,
+                'app_version': self.appVersion,
+                'project_io_version': self.projectIOVersion,
+                'user_fields': self.userFields
+                }
 
-    def add_ipod_engine_ref(self, uid):
-        if uid not in self.ipodEngineRequirements:
-            self.ipodEngineRequirements.append(uid)
 
-    def remove_ipod_engine_ref(self, uid):
-        if uid in self.ipodEngineRequirements:
-            self.ipodEngineRequirements.remove(uid)
+class ProjectRegisterContentContainerError(Exception):
+    pass
+
+
+class ProjectVisitContentContainerError(Exception):
+    pass
+
+
+class ProjectFileNode(anytree.NodeMixin):
+    def __init__(self, **kwargs):
+        self.fileId = kwargs.get('fileId', util_get_uuid_string())
+        self.ccid = kwargs.get('ccid')
+        self.parent = kwargs.get('parent')
+
+    def get_file_path(self):
+        _path = [x.fileId for x in self.path if x.fileId != '__root__']
+        return pathlib.Path(*_path)
 
 
 class Project:
-
-    def __init__(self, name):
+    def __init__(self, name, version='4'):
         self.name = name
-        self.meta = ProjectMeta()
-        self.workspacePath = APP_PROJECT_PATH
-        self.projectPath = os.path.join(APP_PROJECT_PATH, name)
-        self.projectEntryFilePath = os.path.join(self.projectPath, self.name + APP_CONFIG.scProjExt)
-        self.projectTreeModel = ProjectTreeModel()
-        self.projectTreeRoot = None
-        self._noSavableRole = [EnumProjectItemRole.RACK_SESSION_DEV_ITEM]
-        self.mainPerspective = None
+        self.version = version
+        self.workspacePath = PROJECT_PATH
+        self.projectPath = os.path.join(PROJECT_PATH, name)
+        self.projectEntryFilePath = os.path.join(self.projectPath, self.name + AppConfig.projEntryFileExt)
+        self.fileNodeRoot = ProjectFileNode(fileId='__root__')
+        self.contentContainers = dict()
+        self.header = ProjectHeader(project_io_version=self.version)
+        self.error = ''
+        self.persistFileExtension = '.mbt'
+
+    def register_with_project(self, obj: ContentContainer, parent: ContentContainer = None):
+        assert isinstance(obj, ContentContainer), 'ContentContainer type required'
+        if parent is not None:
+            assert isinstance(parent, ContentContainer), 'ContentContainer type required'
+        _id = obj.get_id()
+        if self.is_content_container_registered(_id):
+            raise ProjectRegisterContentContainerError('ContentContainer id already registered.')
+        self.contentContainers.update({_id: obj})
+        if not self.is_content_container_file_assigned(_id):
+            if parent is None:
+                _parent = self.fileNodeRoot
+            else:
+                _parent = self.get_file_node_by_ccid(parent.get_id())
+                if _parent is None:
+                    raise ProjectVisitContentContainerError('ContentContainer id: {} not registered.'.format(parent.get_id()))
+            ProjectFileNode(parent=_parent, file_id=util_get_uuid_string(), ccid=_id)
+        # else:
+        #    obj.set(self.load_content_by_ccid(_id))
+
+    def is_content_container_registered(self, ccid):
+        return ccid in self.contentContainers
+
+    def is_content_container_file_assigned(self, ccid):
+        return len(anytree.findall(self.fileNodeRoot, lambda x: x.ccid == ccid)) > 0
+
 
     def set_workspace_path(self, path):
         self.workspacePath = path
         self.projectPath = os.path.join(path, self.name)
-        self.projectEntryFilePath = os.path.join(self.projectPath, self.name + APP_CONFIG.scProjExt)
+        self.projectEntryFilePath = os.path.join(self.projectPath, self.name + AppConfig.projEntryFileExt)
 
-    def is_ipod_engine_required(self, engine_id):
-        return engine_id in self.meta.ipodEngineRequirements
+    def load_project(self, project_path):
+        try:
+            _path = pathlib.Path(project_path)
+            _file_path = _path.parents[0]
+            _work_path = _file_path.parent
+            _file_name = _path.name
+            _project_name = _path.stem
+            _file_io = AppYamlFileIO(_file_path, _project_name, extend='.proj')
+            _ret = _file_io.read()
+            if not _ret:
+                self.error = _file_io.error
+                return _ret
+            self.name = _project_name
+            self.set_workspace_path(_work_path)
+            self.header = _file_io.data.get('header')
+            self.fileNodeRoot = DictImporter(ProjectFileNode).import_(_file_io.data.get('project'))
+            self.reset_cc_content()
+            self.header.update()
+            return True
+        except Exception as e:
+            self.error = 'cant load project file'
+            return False
 
-    def add_ipod_engine_ref(self, engine_id):
-        self.meta.add_ipod_engine_ref(engine_id)
-
-    def remove_ipod_engine_ref(self, engine_id):
-        self.meta.remove_ipod_engine_ref(engine_id)
-
-    def do_create_project_file(self):
-        assert self.projectTreeRoot is not None
-        _eps = anytree.findall(self.projectTreeRoot, lambda x: not x.children)
-        for node in _eps:
-            self.create_project_node_file(node)
-
-    def do_save_project_node(self):
-        _file_io = AppYamlInfFileIO(self.projectPath, self.name + APP_CONFIG.scProjExt)
-        # export exclusive the attribute contextMenu
-        _exporter = DictExporter(attriter=lambda attr: [(k, v) for k, v in attr if k not in ['contextMenu', 'content']],
-                                 childiter=lambda children: [child for child in children if child.role not in [
-                                     EnumProjectItemRole.RACK_SESSION_DEV_ITEM.value]])
-        _d = {'meta': self.meta,
-              'project': _exporter.export(self.projectTreeRoot),
-              'perspective': self.mainPerspective}
+    def save_project(self):
+        self.header.update()
+        _file_name = self.name + AppConfig.projEntryFileExt
+        pathlib.Path(self.projectPath).mkdir(exist_ok=True, parents=True)
+        _file_io = AppYamlFileIO(self.projectPath, _file_name)
+        _d = {'header': self.header,
+              'project': DictExporter().export(self.fileNodeRoot),
+              'perspective': None}
         _file_io.write(_d)
         return True
 
-    def do_load_project(self):
-        _file_io = AppYamlInfFileIO(self.projectPath, self.name + APP_CONFIG.scProjExt)
-        _file_io.read()
-        _project_d = _file_io.body.kwargs.get('project')
-        _perspective = _file_io.body.kwargs.get('perspective')
-        self.meta = _file_io.body.kwargs.get('meta')
-        if not _project_d:
-            return False
-        self.projectTreeModel = ProjectTreeModel()
-        self.projectTreeRoot = DictImporter(ProjectTreeNode).import_(_project_d)
-        self.projectTreeRoot.parent = self.projectTreeModel.p_root
-        self.mainPerspective = _perspective
-        return True
+    def _do_read_file_node(self, node: ProjectFileNode):
+        _path = pathlib.Path(self.projectPath).joinpath(node.get_file_path())
+        _file_io = AppYamlFileIO(_path, _path.name, self.persistFileExtension)
+        _ret = _file_io.read()
+        if not _ret:
+            self.error = _file_io.error
+            return None
+        else:
+            return _file_io.data
 
-    def save_perspective(self, main_perspective_str: str):
-        if main_perspective_str is not None:
-            self.mainPerspective = main_perspective_str
-            self.do_save_project_node()
+    def _do_save_file_node(self, node: ProjectFileNode):
+        _file_path = os.path.join(self.projectPath, node.get_file_path())
+        _cc_node = self.contentContainers.get(node.ccid)
+        pathlib.Path(_file_path).mkdir(exist_ok=True, parents=True)
+        _file_io = AppYamlFileIO(_file_path, node.fileId, self.persistFileExtension)
+        _file_io.write(_cc_node.get())
 
-    def create_project_node_file(self, node, f_io_cls=None):
-        if node is not None:
-            if node.has_flag(EnumProjectItemFlag.SAVABLE):
-                _file_path, _file_name = node.get_file_info()
-                _file_path = os.path.join(self.workspacePath, _file_path)
-                pathlib.Path(_file_path).mkdir(exist_ok=True, parents=True)
-                if _file_name:
-                    if f_io_cls is None:
-                        _file_path = os.path.join(_file_path, _file_name)
-                        with open(_file_path, 'w') as f:
-                            f.write('')
-                    else:
-                        _f_io = f_io_cls(_file_path, _file_name)
-                        _f_io.write(None)
+    def save_all(self):
+        for k, v in self.contentContainers.items():
+            _file_node = self.get_file_node_by_ccid(k)
+            if _file_node:
+                self._do_save_file_node(_file_node)
 
-    def remove_project_node_file(self, node):
-        if node is not None:
-            if node.has_flag(EnumProjectItemFlag.REMOVABLE):
-                _file_path, _file_name = node.get_file_info()
-                _file_path = os.path.join(self.workspacePath, _file_path)
-                if _file_name:
-                    _file_path = os.path.join(self.workspacePath, _file_path, _file_name)
-                    pathlib.Path(_file_path).unlink()
-                else:
-                    util_remove_folder(_file_path)
+    def reset_cc_content(self):
+        for k, v in self.contentContainers.items():
+            _content = self.get_content_by_ccid(k)
+            v.manager.set_content(_content)
 
-    def do_save_project_node_content(self, node, io_cls=None, recursive=False):
-        if node is None:
-            node = self.projectTreeModel.p_root
-        if node.has_flag(EnumProjectItemFlag.SAVABLE) and node.fileAttr == EnumProjectNodeFileAttr.FILE:
-            _file_path, _file_name = node.get_file_info()
-            _file_path = os.path.join(self.workspacePath, _file_path)
-            if io_cls is None:
-                _io = AppYamlObjFileIO(_file_path, _file_name)
-            else:
-                _io = io_cls(_file_path, _file_name)
-            if not recursive:
-                _io.write(node.content)
-            del _io
-        return True
+    def get_content_by_ccid(self, ccid):
+        _file_node = self.get_file_node_by_ccid(ccid)
+        if _file_node is None:
+            return None
+        return self._do_read_file_node(_file_node)
+
+    def get_file_node_by_ccid(self, ccid) -> ProjectFileNode:
+        return anytree.find(self.fileNodeRoot, lambda x: x.ccid == ccid)
+
+    def has_content_changed(self):
+        return False

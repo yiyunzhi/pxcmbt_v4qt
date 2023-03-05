@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-import os
+
 # ------------------------------------------------------------------------------
 #                                                                            --
 #                PHOENIX CONTACT GmbH & Co., D-32819 Blomberg                --
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : main_win_mb_interactor.py
+# Sourcefile(s) : class_call_ext_unified_evt_handle.py
 # ------------------------------------------------------------------------------
 #
-# File          : main_win_mb_interactor.py
+# File          : class_call_ext_unified_evt_handle.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,14 +19,9 @@ import os
 #
 #
 # ------------------------------------------------------------------------------
-import typing
-from core.application.define import EnumAppMsg
-from core.application.class_application_context import APP_CONTEXT
-from core.gui.qtimp import QtGui, QtCore
-from .define import EnumMainMenuIDs
-
-if typing.TYPE_CHECKING:
-    from .main_win_mb_mgr import APPMenubarManager
+import os
+from core.application.class_application_context import ApplicationContext
+from core.gui.qtimp import QtCore
 
 
 class OSUnifiedEventHandleExecException(Exception): pass
@@ -41,7 +36,8 @@ class CallExternalUnifiedEventHandle:
         return handle_name.startswith(self._prefix)
 
     def on_exec_started(self, *args):
-        APP_CONTEXT.set_app_busy(False)
+        _app_ctx=ApplicationContext()
+        _app_ctx.set_app_busy(False)
 
     def on_exec_finish(self, exit_code, exit_state):
         self._prog.deleteLater()
@@ -55,9 +51,10 @@ class CallExternalUnifiedEventHandle:
         self._prog.started.connect(self.on_exec_started)
         # self._prog.finished.connect(self.on_exec_finish)
         try:
-            APP_CONTEXT.set_app_busy(True)
+            _app_ctx = ApplicationContext()
+            _app_ctx.set_app_busy(True)
             if method_name == '{}os.start_program'.format(self._prefix):
-                self._prog.start(kwargs.get('program'),kwargs.get('arguments'))
+                self._prog.start(kwargs.get('program'), kwargs.get('arguments'))
             elif method_name == '{}os.start_command'.format(self._prefix):
                 # self._prog.startDetached('cmd')
                 _ret = os.system(kwargs.get('command'))
@@ -67,19 +64,3 @@ class CallExternalUnifiedEventHandle:
             raise OSUnifiedEventHandleExecException(e)
         finally:
             pass
-
-
-class APPMenubarInteractor:
-    def __init__(self, menubar_mgr: 'APPMenubarManager'):
-        self.mgr = menubar_mgr
-        self.mgr.mb.triggered.connect(self.on_menubar_action_triggered)
-        self.ceUnifiedEventHandler = CallExternalUnifiedEventHandle()
-
-    def on_menubar_action_triggered(self, event: QtGui.QAction):
-        _node = event.data()
-        _handle = _node.handle
-        if _handle is None:
-            return
-        if self.ceUnifiedEventHandler.is_handleable(_handle['method']):
-            self.ceUnifiedEventHandler.exec(self.mgr.container, _handle['method'], **_handle['kwargs'])
-        print('---->on_menubar_action_triggered:', _node.uid)

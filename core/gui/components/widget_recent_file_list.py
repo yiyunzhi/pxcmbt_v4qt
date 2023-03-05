@@ -23,7 +23,7 @@ from core.gui.qtimp import QtGui, QtCore, QtWidgets
 
 
 class RecentFileItemWidget(QtWidgets.QWidget):
-    sigClicked = QtCore.Signal(str)
+    sigClicked = QtCore.Signal(object)
 
     def __init__(self, name: str, date: str, path: str, parent):
         super().__init__(parent)
@@ -48,6 +48,7 @@ class RecentFileItemWidget(QtWidgets.QWidget):
         self.mainLayout.setContentsMargins(5, 0, 0, 0)
         self.mainLayout.setSpacing(0)
         self.mainLayout.addWidget(self.nameLabel, 0, QtCore.Qt.AlignmentFlag.AlignTop)
+        self.mainLayout.addSpacing(5)
         self.mainLayout.addWidget(self.dateLabel, 0, QtCore.Qt.AlignmentFlag.AlignTop)
         self.mainLayout.addWidget(self.pathLabel, 0, QtCore.Qt.AlignmentFlag.AlignTop)
         self.mainLayout.insertStretch(-1, 1)
@@ -62,12 +63,12 @@ class RecentFileItemWidget(QtWidgets.QWidget):
             elif event.type() == QtCore.QEvent.Type.MouseButtonRelease and self._mouseBtnPressed:
                 self._mouseBtnPressed = False
                 if self.contentsRect().contains(self.mapFromGlobal(QtGui.QCursor.pos())):
-                    self.sigClicked.emit(self.pathLabel.text())
+                    self.sigClicked.emit((self.pathLabel.text(),self.nameLabel.text()))
         return False
 
 
 class RecentFileListWidget(QtWidgets.QWidget):
-    sigItemClicked = QtCore.Signal(str)
+    sigItemClicked = QtCore.Signal(object)
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -83,7 +84,7 @@ class RecentFileListWidget(QtWidgets.QWidget):
         self.sigItemClicked.emit(evt)
 
     def set_content(self, items):
-        _children = self.mainLayout.findChildren(RecentFileItemWidget, '', QtCore.Qt.FindChildOption.FindDirectChildrenOnly)
+        _children = self.findChildren(RecentFileItemWidget)
         for x in _children:
             x.disconnect(self)
             x.deleteLater()

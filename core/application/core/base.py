@@ -24,6 +24,9 @@ from collections import OrderedDict
 from collections.abc import Iterable
 import inspect, typing, copy, pickle
 from pickle import dumps
+from anytree.exporter import DictExporter as ZTreeDictExporter
+from anytree.importer import DictImporter as ZTreeDictImporter
+from anytree import NodeMixin as ZTreeNodeMixin
 import yaml
 import numpy as np
 
@@ -37,6 +40,10 @@ def singleton(cls):
         return instances[cls]
 
     return get_instance
+
+
+def is_singleton_object(obj):
+    return obj.__name__ == 'get_instance'
 
 
 class YAMLObjectMetaclass(type):
@@ -237,3 +244,34 @@ class ClassMapper:
     @staticmethod
     def get_class_by_name(name: str):
         return ClassMapper._NAME_MAP.get(name)
+
+
+class Content(Serializable):
+    serializeTag = '!Content'
+
+    def __init__(self):
+        pass
+
+    @property
+    def serializer(self):
+        return {}
+
+
+class ContentContainer:
+    def __init__(self):
+        pass
+
+    def get_id(self):
+        return hex(id(self))
+
+    def set(self, content: Content):
+        pass
+
+    def get(self) -> Content:
+        pass
+
+    def serialize(self, *args, **kwargs):
+        pass
+
+    def deserialize(self, *args, **kwargs):
+        pass

@@ -19,12 +19,10 @@
 #
 #
 # ------------------------------------------------------------------------------
-import anytree
+from core.application.core.base import ZTreeNodeMixin
 from core.application.utils_helper import util_get_uuid_string
 
-TreeNodeMixin = anytree.NodeMixin
 
-
-class UUIDTreeNode(anytree.NodeMixin):
+class UUIDTreeNode(ZTreeNodeMixin):
     def __init__(self, **kwargs):
         self.uuid = kwargs.get('uuid', util_get_uuid_string())

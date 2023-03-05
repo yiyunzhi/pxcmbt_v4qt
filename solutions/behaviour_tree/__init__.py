@@ -20,10 +20,12 @@
 #
 # ------------------------------------------------------------------------------
 SOLUTION_DEF = {
-    'icon': None,
+    'uuid': 'c41e92bc-25f4-419a-8be7-f7cf94e166f0',
+    'icon': ['fa', 'ph.tree-structure'],
     'namespace': 'BehaviourTree',
     'type': 'bt',
     'version': '1.0.1',
-    'editor': '',
+    'view': '',
+    'setup': None,
     'builtinEntitiesPath': '',
 }

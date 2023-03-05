@@ -20,7 +20,6 @@
 #
 # ------------------------------------------------------------------------------
 import anytree
-from .class_layout_modifier import LayoutModifier
 
 
 class HierarchyActionModel(anytree.NodeMixin):
@@ -41,7 +40,7 @@ class HierarchyActionModel(anytree.NodeMixin):
         self.layoutModifiers = []
         _layoutModifiers = kwargs.get('layoutModifiers', [])
         for x in _layoutModifiers:
-            self.layoutModifiers.append(LayoutModifier(**x))
+            self.layoutModifiers.append(x)
 
     def get_label(self):
         return '%s.%s' % (self.i18nNs, self.label)

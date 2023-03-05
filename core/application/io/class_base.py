@@ -5,11 +5,11 @@
 #                PHOENIX CONTACT GmbH & Co., D-32819 Blomberg                --
 #                                                                            --
 # ------------------------------------------------------------------------------
-# Project       : 
-# Sourcefile(s) : __init__.py.py
+# Project       : Test Control System
+# Sourcefile(s) : class_base.py
 # ------------------------------------------------------------------------------
 #
-# File          : __init__.py.py
+# File          : class_base.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,20 +19,12 @@
 #
 #
 # ------------------------------------------------------------------------------
-_uuid = 'c976859c-956d-4075-8ff4-c9f6600b91ac'
+class AppFileIO:
+    def __init__(self):
+        pass
 
+    def read(self, *args, **kwargs):
+        pass
 
-def setup(app_ctx):
-    print('fn solution setup')
-
-
-SOLUTION_DEF = {
-    'uuid': _uuid,
-    'icon': ['fa', 'mdi.function-variant'],
-    'namespace': 'Functions',
-    'type': 'fn',
-    'version': '1.0.1',
-    'view': None,
-    'setup': setup,
-    'builtinEntitiesPath': ''
-}
+    def write(self, *args, **kwargs):
+        pass

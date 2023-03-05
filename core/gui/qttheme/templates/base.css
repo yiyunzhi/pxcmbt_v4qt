@@ -2,6 +2,7 @@
 /* base */
 /* todo: replace color use platte*/
 *{
+  /*color: {{colors.primaryTextColor}};*/
   color: {{colors.secondaryTextColor}};
   {% if font.fontFamily %}
   font-family: {{font.fontFamily}};
@@ -949,12 +950,12 @@ QFrame[frameShape="5"] {
 /*  QToolBar  */
 
 QToolBar {
-  background: {{colors.secondaryDarkColor}};
-  border: 0px solid;
+  spacing: 2px;
 }
 
 QToolBar:horizontal {
-  border-bottom: 1px solid {{colors.secondaryLightColor}};
+  border-bottom: 1px solid {{colors.secondaryLightColor|opacity(0.6)}};
+  padding: 2px;
 }
 
 QToolBar:vertical {
@@ -983,10 +984,8 @@ QToolBar::separator:vertical {
 
 /*  ------------------------------------------------------------------------  */
 /*  QToolButton  */
-
 QToolButton {
-  background: {{colors.secondaryDarkColor}};
-  border: 0px;
+  border: none;
   margin: 1px;
   padding: 1px;
   /*
@@ -1019,6 +1018,15 @@ QToolButton:checked {
 
 QToolButton[popupMode="1"] { /* only for MenuButtonPopup */
     padding-right: 10px; /* make way for the popup button */
+}
+
+/* the subcontrols below are used only in the MenuButtonPopup mode */
+QToolButton::menu-button {
+    /*border: 2px solid gray;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;*/
+    /* 16px width + 4px for border = 20px allocated above */
+    width: 10px;
 }
 
 /*  ------------------------------------------------------------------------  */
