@@ -41,6 +41,7 @@ todo: changeDetect, use undoStack?? viewManager add a method name has_changed()-
 -------------app--------------
 done: improve QTADS while darktheme setup
 done: left put a mode select sidebar, default only centraldockarea
+todo: theme loaded from setting, if no setting use default.
 todo: the menubar change the state base on the currentFocusedDockWidget
 todo: the dockWidget close emit to app, before close must be checked if content change, if yes then ask user whether save it?
 done: mode selector in group, every action from same group will in tabWidget grouped.
