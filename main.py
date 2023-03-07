@@ -14,6 +14,10 @@ from core.gui.core.class_icon_repository import IconRepository
 from core.gui import GUI_VIEW_FACTORY
 
 if __name__ == '__main__':
+    # import signal
+    #
+    # signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     _root_path = os.path.dirname(__file__)
     app = QtWidgets.QApplication(sys.argv)
     _splash = ZSplashScreen(5)
@@ -24,6 +28,10 @@ if __name__ == '__main__':
     QtCore.QCoreApplication.setApplicationName(APP_NAME)
     QtCore.QCoreApplication.setApplicationVersion(APP_VERSION)
     QtCore.QSettings.setDefaultFormat(QtCore.QSettings.Format.IniFormat)
+    _setting = QtCore.QSettings()
+    _setting.beginGroup('theme')
+    _prev_theme=_setting.value('name','auto')
+    _setting.endGroup()
     print('--->QSettingsFileName:', QtCore.QSettings().fileName())
     # create a global instance of our class to register the hook
     _qt_exception_hook = UncaughtHook()
@@ -49,7 +57,7 @@ if __name__ == '__main__':
     _app_ctx.iconResp = IconRepository(app)
     _app_ctx.i18nResp = I18nRepository()
     _win = MainWindow()
-    _win.set_theme('auto', app)
+    _win.set_theme(_prev_theme, app)
     _win.resize(1280, 720)
     _app_ctx.mainWin = _win
     _app_ctx.app = app

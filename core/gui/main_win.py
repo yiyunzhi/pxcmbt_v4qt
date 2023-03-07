@@ -521,6 +521,10 @@ class MainWindow(QtWidgets.QMainWindow):
             _app_ctx.paletteAppliedFlag = True
             self.busyIndicator.color = _app_ctx.app_theme_context.get('colors').get('primaryColor')
             pub.sendMessage('theme.themeChanged', theme=_app_ctx.app_theme, palette=self.palette())
+            _setting = QtCore.QSettings()
+            _setting.beginGroup('theme')
+            _setting.setValue('name',_app_ctx.app_theme)
+            _setting.endGroup()
             event.accept()
         super().changeEvent(event)
 

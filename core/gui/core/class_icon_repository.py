@@ -78,6 +78,13 @@ class IconRepository:
             _icon = _cached
         return _icon
 
+    @staticmethod
+    def get_icon_silence(icon_name, icon_ns='fa', **kwargs):
+        if icon_ns == 'fa':
+            return qta.icon(icon_name, **kwargs)
+        else:
+            return QtGui.QIcon(icon_name)
+
     def _get_best_color(self):
         return self._themePalette.windowText().color()
 

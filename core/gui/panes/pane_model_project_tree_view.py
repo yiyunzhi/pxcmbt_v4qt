@@ -54,7 +54,7 @@ class _ModelProjectNodeTreeView(QtWidgets.QWidget, ZView):
         self.treeView.customContextMenuRequested.connect(self.on_context_menu_activated)
         self.treeView.doubleClicked.connect(self.on_node_double_clicked)
         self.treeView.clicked.connect(self.on_node_clicked)
-
+        self.treeView.installEventFilter(self)
         # layout
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
@@ -113,19 +113,26 @@ class _ModelProjectNodeTreeView(QtWidgets.QWidget, ZView):
         self.toolbar.addAction(_remove_action)
         self.toolbar.addAction(_order_action)
 
+    def _is_clipboard_valid(self):
+        _clipb = QtGui.QClipboard()
+        return _clipb.mimeData().hasUrls()
+
     def on_context_menu_activated(self, pos: QtCore.QPoint):
         _idx_at = self.treeView.indexAt(pos)
-        if not _idx_at.isValid():
-            return
-        _node = _idx_at.internalPointer()
-        if _node is None or _node.readonly:
-            return
-
+        _clip_b = QtGui.QClipboard()
         _menu = QtWidgets.QMenu()
         _action_rename = QtGui.QAction('rename', self)
+        _action_rename.setIcon(self._appCtx.iconResp.get_icon_silence('msc.tag'))
+
         _action_copy = QtGui.QAction('copy', self)
+        _action_copy.setIcon(self._appCtx.iconResp.get_icon_silence('msc.copy'))
+
         _action_paste = QtGui.QAction('paste', self)
+        _action_paste.setIcon(self._appCtx.iconResp.get_icon_silence('msc.clippy'))
+
         _action_delete = QtGui.QAction('delete', self)
+        _action_delete.setIcon(self._appCtx.iconResp.get_icon_silence('msc.close'))
+
         _menu.addAction(_action_rename)
         _menu.addSeparator()
         _menu.addAction(_action_copy)
@@ -135,6 +142,19 @@ class _ModelProjectNodeTreeView(QtWidgets.QWidget, ZView):
         _action_copy.triggered.connect(lambda x: self.on_node_copy_required(x, _idx_at))
         _action_paste.triggered.connect(lambda x: self.on_node_paste_required(x, _idx_at))
         _action_delete.triggered.connect(lambda x: self.on_node_delete_required(x, _idx_at))
+
+        if not _idx_at.isValid():
+            _action_rename.setEnabled(False)
+            _action_copy.setEnabled(False)
+            if not self._is_clipboard_valid():
+                _action_paste.setEnabled(False)
+            _action_delete.setEnabled(False)
+        else:
+            _node = _idx_at.internalPointer()
+            if _node is None or _node.readonly:
+                _action_rename.setEnabled(False)
+                _action_copy.setEnabled(False)
+                _action_delete.setEnabled(False)
         _menu.exec(QtGui.QCursor.pos())
 
     def on_node_rename_required(self, evt, index: QtCore.QModelIndex):
@@ -161,7 +181,7 @@ class _ModelProjectNodeTreeView(QtWidgets.QWidget, ZView):
         self.copy_item(index)
 
     def on_node_paste_required(self, evt, index: QtCore.QModelIndex):
-        pass
+        self.paste_item()
 
     def on_node_delete_required(self, evt, index: QtCore.QModelIndex):
         self.delete_item(index)
@@ -182,16 +202,46 @@ class _ModelProjectNodeTreeView(QtWidgets.QWidget, ZView):
             self.set_toolbar_state('normal')
         self.sigItemSelectionChanged.emit(index)
 
+    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        if watched is self.treeView:
+            if event.type() == event.Type.ShortcutOverride:
+                if event.matches(QtGui.QKeySequence.StandardKey.Copy):
+                    self.copy_item(self.treeView.currentIndex())
+                    return False
+                elif event.matches(QtGui.QKeySequence.StandardKey.Paste):
+                    self.paste_item()
+                    return False
+        return super().eventFilter(watched, event)
+
     def set_toolbar_state(self, state='normal'):
         for x in self.toolbar.actions():
             if x.data() and isinstance(x.data(), Toggling):
                 x.data().toggle(state)
 
-    def copy_item(self, index):
-        pass
+    def copy_item(self, index: QtCore.QModelIndex):
+        """
+        scheme:path?queries
+        """
+        if not index.isValid():
+            return
+        _node = index.internalPointer()
+        if _node.readonly:
+            return
+        _mime = QtCore.QMimeData()
+        _mime.setData('text/uri-list', ('mbt:appModelProjectTreeNode?uuid=%s&parent=%s' % (index.internalPointer().uuid,
+                                                                                           index.internalPointer().parent.uuid)).encode('utf-8'))
+        _clipb = QtGui.QClipboard()
+        _clipb.setMimeData(_mime)
+        print('--->copied')
 
     def paste_item(self):
-        pass
+        _clipb = QtGui.QClipboard()
+        if _clipb.mimeData().hasUrls():
+            _urls = _clipb.mimeData().urls()
+            for x in _urls:
+                print('--_>uri:', x.scheme(), x.query(), x.path())
+
+        print('--->clipboard mimeData:', _clipb.mimeData().hasUrls(), _clipb.mimeData().urls())
 
     def delete_item(self, index):
         _msg_b = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Information, 'delete',
